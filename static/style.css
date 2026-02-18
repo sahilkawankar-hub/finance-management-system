@@ -57,3 +57,42 @@ button {
 button:hover {
     background-color: #45a049;
 }
+
+.container-large {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 600px;
+    max-width: 90%;
+    margin: 50px auto;
+    margin-bottom: 100px;
+}
+
+h3 {
+    color: #4CAF50;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 5px;
+}
+
+input[type="number"],
+input[type="text"],
+input[type="date"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+body {
+    overflow-y: scroll;
+}
+
+.container-large {
+    max-height: 90vh;
+    overflow-y: auto;
+}
