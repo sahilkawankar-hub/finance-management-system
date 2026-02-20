@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FinTrack</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background-color: #0a0e1a;
+      border-bottom: 1px solid #1f2d45;
+      padding: 0 32px;
+      position: sticky; top: 0; z-index: 99;
+    }
+    .header-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 42px; height: 42px; background-color: #f59e0b;
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-weight: 900; font-size: 15px;
+      color: #000000; letter-spacing: -1px;
+      box-shadow: 0 2px 10px rgba(245,158,11,0.4);
+    }
+    .logo-text { font-size: 18px; font-weight: 700; color: #e2e8f0; }
+
+    nav { display: flex; gap: 4px; }
+    .nav-btn {
+      background: transparent; color: #64748b;
+      border: 1px solid transparent; border-radius: 10px;
+      padding: 7px 18px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .nav-btn:hover { color: #e2e8f0; }
+    .nav-btn.active {
+      background-color: rgba(245,158,11,0.12);
+      color: #f59e0b; border-color: rgba(245,158,11,0.35);
+    }
+
+    .header-actions { display: flex; gap: 8px; }
+    .btn-primary {
+      background-color: #f59e0b; color: #000; border: none;
+      border-radius: 10px; padding: 9px 20px; font-size: 13px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background-color: #d97706; }
+    .btn-outline {
+      background: transparent; color: #64748b;
+      border: 1px solid #1f2d45; border-radius: 10px;
+      padding: 9px 16px; font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-outline:hover { color: #e2e8f0; border-color: #64748b; }
+
+    /* LAYOUT */
+    main { max-width: 1200px; margin: 0 auto; padding: 28px 32px; }
+    .tab { display: none; }
+    .tab.active { display: block; }
+
+    /* CARD */
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #1f2d45;
+      border-radius: 16px;
+      padding: 24px;
+    }
+    .card-p0 {
+      background-color: #151e2e;
+      border: 1px solid #1f2d45;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .mb-20 { margin-bottom: 20px; }
+    .mb-16 { margin-bottom: 16px; }
+
+    /* STAT ROW */
+    .stat-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 160px;
+      background-color: #151e2e; border: 1px solid #1f2d45;
+      border-radius: 16px; padding: 22px;
+    }
+    .stat-label {
+      color: #bfa4a4; font-size: 11px; font-weight: 600;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 24px; font-weight: 700;
+      font-family: 'Courier New', monospace; margin-bottom: 4px;
+    }
+    .stat-sub { color: #64748b; font-size: 12px; }
+
+    .c-green  { color: #10b981 !important; }
+    .c-red    { color: #ef4444 !important; }
+    .c-blue   { color: #3b82f6 !important; }
+    .c-amber  { color: #f59e0b !important; }
+    .c-purple { color: #8b5cf6 !important; }
+    .c-muted  { color: #64748b; }
+
+    /* COMMITMENT BAR */
+    .commit-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .commit-title   { font-weight: 600; font-size: 15px; }
+    .commit-pct     { font-family: 'Courier New', monospace; font-weight: 700; font-size: 18px; }
+    .progress-track { background-color: #1f2d45; border-radius: 99px; height: 10px; overflow: hidden; margin-bottom: 16px; }
+    .progress-fill  { height: 100%; border-radius: 99px; background-color: #10b981; transition: width 0.6s ease; }
+    .commit-breakdown { display: flex; gap: 32px; }
+    .bd-label { color: #64748b; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .bd-val   { font-family: 'Courier New', monospace; font-weight: 600; font-size: 15px; }
+
+    /* TWO COL */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* UPCOMING DUES */
+    .due-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #0d1626; }
+    .due-item:last-child { border-bottom: none; }
+    .due-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+    .due-meta  { color: #050e1a; font-size: 12px; }
+    .due-right { display: flex; align-items: center; gap: 10px; }
+    .due-amt   { font-family: 'Courier New', monospace; font-weight: 600; font-size: 14px; }
+
+    /* BADGE */
+    .badge { border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
+    .badge-EMI     { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-SIP     { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-Expense { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+
+    /* ENTRIES */
+    .entries-bar  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .filter-group { display: flex; gap: 8px; }
+    .filter-btn   { background: transparent; color: #13171e; border: 1px solid #1f2d45; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .fa-all       { color: #f59e0b; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
+    .fa-emi       { color: #ef4444; background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.35); }
+    .fa-sip       { color: #10b981; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
+    .fa-expense   { color: #3b82f6; background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.35); }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background-color: #0a0e1a; border-bottom: 1px solid #1f2d45; }
+    th { padding: 13px 18px; text-align: left; color: #64748b; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid #1f2d45; transition: background 0.15s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background-color: rgba(255,255,255,0.02); }
+    tbody tr.alt-row { background-color: rgba(10,14,26,0.4); }
+    td { padding: 13px 18px; font-size: 14px; color: #e2e8f0; }
+    .td-name   { font-weight: 600; }
+    .td-amount { font-family: 'Courier New', monospace; color: #f59e0b; font-weight: 600; }
+    .td-meta   { color: #64748b; font-size: 13px; }
+    .btn-remove { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-remove:hover { background: rgba(239,68,68,0.25); }
+    .empty-state { padding: 40px; text-align: center; color: #64748b; font-size: 14px; display: none; }
+
+    /* GOALS */
+    .goals-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .goals-topbar h2 { font-size: 20px; font-weight: 700; }
+    .goals-topbar p  { color: #64748b; font-size: 13px; margin-top: 2px; }
+
+    .summary-box {
+      background: linear-gradient(135deg, rgba(245,158,11,0.07), rgba(59,130,246,0.07));
+      border: 1px solid #1f2d45; border-radius: 16px;
+      padding: 22px; margin-bottom: 24px;
+    }
+    .summary-box-title { font-size: 13px; font-weight: 700; color: #f59e0b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(31,45,69,0.6); }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-key { color: #64748b; font-size: 13px; }
+    .summary-val { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; }
+
+    .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+    .goal-card {
+      background-color: #151e2e; border: 1px solid #1f2d45;
+      border-radius: 16px; padding: 22px; position: relative;
+    }
+    .goal-icon     { font-size: 30px; margin-bottom: 10px; }
+    .goal-name     { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .goal-deadline { color: #64748b; font-size: 12px; margin-bottom: 16px; }
+
+    .goal-amounts  { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .goal-saved    { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #10b981; }
+    .goal-target   { font-family: 'Courier New', monospace; font-size: 13px; color: #64748b; }
+
+    .goal-prog-track { background-color: #1f2d45; border-radius: 99px; height: 8px; margin-bottom: 6px; }
+    .goal-prog-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 0.6s ease; }
+
+    .goal-pct-row  { display: flex; justify-content: space-between; margin-bottom: 16px; }
+    .goal-pct      { color: #10b981; font-size: 12px; font-weight: 700; }
+    .goal-months   { color: #64748b; font-size: 12px; }
+
+    .goal-actions  { display: flex; gap: 8px; }
+    .btn-deposit {
+      flex: 1; background: rgba(16,185,129,0.15); color: #10b981;
+      border: 1px solid rgba(16,185,129,0.3); border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-deposit:hover { background: rgba(16,185,129,0.25); }
+    .btn-del-goal {
+      background: rgba(239,68,68,0.12); color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.25); border-radius: 8px;
+      padding: 8px 14px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-del-goal:hover { background: rgba(239,68,68,0.25); }
+
+    .goal-done-tag {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(16,185,129,0.2); color: #10b981;
+      border: 1px solid rgba(16,185,129,0.4);
+      border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 700;
+    }
+
+    .add-goal-card {
+      background-color: #151e2e; border: 2px dashed #1f2d45;
+      border-radius: 16px; padding: 40px 20px;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 10px; cursor: pointer;
+      color: #64748b; font-size: 14px; font-weight: 600;
+      transition: all 0.2s;
+    }
+    .add-goal-card:hover { border-color: #f59e0b; color: #f59e0b; }
+    .add-goal-card span  { font-size: 28px; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background-color: #111827; border: 1px solid #1f2d45;
+      border-radius: 20px; padding: 32px; width: 460px; max-width: 96vw;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+    .modal h3 { font-size: 20px; font-weight: 700; color: #e2e8f0; margin-bottom: 24px; }
+
+    .type-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .type-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; background: #0a0e1a; color: #64748b; border: 1px solid #1f2d45; font-family: inherit; transition: all 0.2s; }
+    .t-emi     { color: #ef4444; background: rgba(239,68,68,0.18);  border-color: rgba(239,68,68,0.45); }
+    .t-sip     { color: #10b981; background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.45); }
+    .t-expense { color: #3b82f6; background: rgba(59,130,246,0.18); border-color: rgba(59,130,246,0.45); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .fg { display: flex; flex-direction: column; gap: 6px; }
+    .fg.full { grid-column: 1 / -1; }
+    .fg label { color: #64748b; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+    .fg input, .fg select {
+      background-color: #0a0e1a; border: 1px solid #1f2d45; border-radius: 10px;
+      padding: 10px 14px; color: #e2e8f0; font-size: 14px; outline: none;
+      font-family: inherit; width: 100%;
+    }
+    .fg input:focus, .fg select:focus { border-color: #f59e0b; }
+    .fg select option { background-color: #111827; color: #e2e8f0; }
+
+    .modal-actions { display: flex; gap: 12px; }
+    .modal-actions .btn-outline { flex: 1; text-align: center; }
+    .modal-actions .btn-primary { flex: 2; }
+
+    .emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .emoji-opt {
+      width: 38px; height: 38px; border-radius: 8px; font-size: 20px;
+      background: #0a0e1a; border: 1px solid #1f2d45;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .emoji-opt.selected { border-color: #f59e0b; background: rgba(245,158,11,0.15); }
+
+    @media (max-width: 768px) {
+      .two-col { grid-template-columns: 1fr; }
+      .stat-row { flex-direction: column; }
+      main { padding: 16px; }
+      header { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">FT</div>
+      <span class="logo-text">FinTrack</span>
+      
+    </div>
+    <nav>
+      <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="nav-btn" data-tab="entries"   onclick="switchTab('entries')">Entries</button>
+      <button class="nav-btn" data-tab="goals"     onclick="switchTab('goals')">Goals</button>
+    </nav>
+    <div class="header-actions">
+      <button class="btn-outline" onclick="openIncomeModal()">Set Income</button>
+      <button class="btn-primary" onclick="openAddModal()">+ Add Entry</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="tab active">
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Monthly Income</div>
+        <div class="stat-value c-green" id="s-income">Rs. 0</div>
+        <div class="stat-sub">Take-home salary</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Outflow</div>
+        <div class="stat-value c-red" id="s-outflow">Rs. 0</div>
+        <div class="stat-sub" id="s-ratio-sub">0% of income</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Free Cash</div>
+        <div class="stat-value c-green" id="s-free">Rs. 0</div>
+        <div class="stat-sub" id="s-free-sub">Available to save/spend</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">SIP Investments</div>
+        <div class="stat-value c-blue" id="s-sip">Rs. 0</div>
+        <div class="stat-sub">Monthly savings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Goals</div>
+        <div class="stat-value c-purple" id="s-goals">0</div>
+        <div class="stat-sub">Savings targets</div>
+      </div>
+    </div>
+
+    <div class="card mb-20">
+      <div class="commit-header">
+        <span class="commit-title">Income Commitment Ratio</span>
+        <span class="commit-pct" id="commit-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="commit-bar" style="width:0%"></div>
+      </div>
+      <div class="commit-breakdown">
+        <div><div class="bd-label">EMI</div><div class="bd-val c-red"   id="bd-emi">Rs. 0</div></div>
+        <div><div class="bd-label">SIP</div><div class="bd-val c-green" id="bd-sip">Rs. 0</div></div>
+        <div><div class="bd-label">Expenses</div><div class="bd-val c-blue" id="bd-exp">Rs. 0</div></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- EMI Summary -->
+      <div class="card">
+        <div style="font-weight:600;font-size:15px;margin-bottom:4px">EMI Summary</div>
+        <div style="color:#64748b;font-size:13px;margin-bottom:16px">Active loans</div>
+        <div id="dash-emi"><p class="c-muted">No EMIs added.</p></div>
+      </div>
+      <!-- Upcoming Dues -->
+      <div class="card">
+        <div style="font-weight:600;font-size:15px;margin-bottom:16px">Upcoming Due Dates</div>
+        <div id="upcoming-list"><p class="c-muted">No upcoming dues this month.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ENTRIES -->
+  <div id="tab-entries" class="tab">
+    <div class="entries-bar">
+      <div class="filter-group">
+        <button class="filter-btn fa-all" onclick="filterEntries('All',this,'all')">All</button>
+        <button class="filter-btn" onclick="filterEntries('EMI',this,'emi')">EMI</button>
+        <button class="filter-btn" onclick="filterEntries('SIP',this,'sip')">SIP</button>
+        <button class="filter-btn" onclick="filterEntries('Expense',this,'expense')">Expense</button>
+      </div>
+      <span class="c-muted" id="entry-count">0 entries</span>
+    </div>
+    <div class="card-p0">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th><th>Type</th><th>Amount</th>
+            <th>Due Date</th><th>Details</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="entries-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="entries-empty">No entries found.</div>
+    </div>
+  </div>
+
+  <!-- GOALS -->
+  <div id="tab-goals" class="tab">
+    <div class="goals-topbar">
+      <div>
+        <h2>Savings Goals</h2>
+        <p>Track your trips, purchases and life targets</p>
+      </div>
+      <button class="btn-primary" onclick="openGoalModal()">+ New Goal</button>
+    </div>
+
+    <div class="summary-box" id="goals-summary" style="display:none">
+      <div class="summary-box-title">Goals Overview</div>
+      <div class="summary-row"><span class="summary-key">Total Goal Amount</span><span class="summary-val c-amber"  id="g-total-target">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Total Saved So Far</span><span class="summary-val c-green"  id="g-total-saved">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Still Needed</span><span class="summary-val c-red"    id="g-total-needed">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Monthly Allocation</span><span class="summary-val c-blue"  id="g-monthly-needed">Rs. 0</span></div>
+    </div>
+
+    <div class="goals-grid" id="goals-grid">
+      <div class="add-goal-card" onclick="openGoalModal()">
+        <span>＋</span>Add Your First Goal
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ADD ENTRY MODAL -->
+<div class="modal-overlay" id="addModal" onclick="closeModal('addModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Add New Entry</h3>
+    <div class="type-row">
+      <button class="type-btn t-emi" onclick="selectType('EMI',this)">EMI</button>
+      <button class="type-btn"       onclick="selectType('SIP',this)">SIP</button>
+      <button class="type-btn"       onclick="selectType('Expense',this)">Expense</button>
+    </div>
+    <input type="hidden" id="f-type" value="EMI">
+    <div class="form-grid">
+      <div class="fg full"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Home Loan"></div>
+      <div class="fg"><label>Monthly Amount (Rs.)</label><input type="number" id="f-amount" placeholder="0" min="1"></div>
+      <div class="fg"><label>Due Date (1-31)</label><input type="number" id="f-due" placeholder="5" min="1" max="31"></div>
+      <!-- EMI -->
+      <div class="fg emi-f"><label>Total Tenure (months)</label><input type="number" id="f-tenure" placeholder="240"></div>
+      <div class="fg emi-f"><label>Remaining (months)</label><input type="number" id="f-remaining" placeholder="200"></div>
+      <div class="fg full emi-f"><label>Bank / Lender</label><input type="text" id="f-bank" placeholder="SBI, HDFC..."></div>
+      <!-- SIP -->
+      <div class="fg sip-f" style="display:none"><label>Duration (months)</label><input type="number" id="f-duration" placeholder="36"></div>
+      <div class="fg sip-f" style="display:none"><label>Months Elapsed</label><input type="number" id="f-elapsed" placeholder="0"></div>
+      <div class="fg full sip-f" style="display:none"><label>Fund House</label><input type="text" id="f-fund" placeholder="UTI, Axis..."></div>
+      <!-- Expense -->
+      <div class="fg full exp-f" style="display:none">
+        <label>Category</label>
+        <select id="f-category">
+          <option value="">Select category</option>
+          <option>Housing</option><option>Transport</option><option>Utilities</option>
+          <option>Education</option><option>Health</option><option>Subscriptions</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('addModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitEntry()">Add Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOME MODAL -->
+<div class="modal-overlay" id="incomeModal" onclick="closeModal('incomeModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Set Monthly Income</h3>
+    <div class="form-grid" style="margin-bottom:20px">
+      <div class="fg full"><label>Monthly Take-Home (Rs.)</label><input type="number" id="f-income" placeholder="75000"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('incomeModal')">Cancel</button>
+      <button class="btn-primary" onclick="saveIncome()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="modal-overlay" id="goalModal" onclick="closeModal('goalModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>New Savings Goal</h3>
+    <div class="form-grid">
+      <div class="fg full">
+        <label>Pick an Icon</label>
+        <div class="emoji-row" id="emoji-row">
+          <div class="emoji-opt selected" onclick="selectEmoji(this,'✈️')">✈️</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🏖️')">🏖️</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🏔️')">🏔️</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🏠')">🏠</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🚗')">🚗</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'💍')">💍</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🎓')">🎓</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'💻')">💻</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'🎯')">🎯</div>
+          <div class="emoji-opt" onclick="selectEmoji(this,'💰')">💰</div>
+        </div>
+        <input type="hidden" id="g-icon" value="✈️">
+      </div>
+      <div class="fg full"><label>Goal Name</label><input type="text" id="g-name" placeholder="e.g. Europe Trip, New Laptop..."></div>
+      <div class="fg"><label>Target Amount (Rs.)</label><input type="number" id="g-target" placeholder="100000" min="1"></div>
+      <div class="fg"><label>Already Saved (Rs.)</label><input type="number" id="g-saved" placeholder="0" min="0"></div>
+      <div class="fg"><label>Monthly Saving (Rs.)</label><input type="number" id="g-monthly" placeholder="5000" min="0"></div>
+      <div class="fg"><label>Target Date</label><input type="month" id="g-date"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('goalModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitGoal()">Add Goal</button>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOSIT MODAL -->
+<div class="modal-overlay" id="depositModal" onclick="closeModal('depositModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 id="deposit-title">Add Money to Goal</h3>
+    <div class="form-grid" style="margin-bottom:20px">
+      <div class="fg full"><label>Amount to Add (Rs.)</label><input type="number" id="dep-amount" placeholder="1000" min="1"></div>
+    </div>
+    <input type="hidden" id="dep-goal-id">
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('depositModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitDeposit()">Add Money</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
