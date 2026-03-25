@@ -1,203 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FinTrack - Login</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background-color: #0a0e1a;
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .login-container {
-      background-color: #151e2e;
-      border: 1px solid #1f2d45;
-      border-radius: 20px;
-      padding: 48px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 32px;
-      justify-content: center;
-    }
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      background-color: #f59e0b;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 900;
-      font-size: 18px;
-      color: #000000;
-      letter-spacing: -1px;
-      box-shadow: 0 4px 16px rgba(245,158,11,0.4);
-    }
-    .logo-text {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #e2e8f0;
-    }
-
-    .demo-hint {
-      text-align: center;
-      background: rgba(245,158,11,0.12);
-      color: #f59e0b;
-      border: 1px solid rgba(245,158,11,0.3);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 32px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: 'Courier New', monospace;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      color: #64748b;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    input[type="text"], input[type="password"] {
-      width: 100%;
-      background-color: #0a0e1a;
-      border: 1px solid #1f2d45;
-      border-radius: 12px;
-      padding: 14px 16px;
-      color: #e2e8f0;
-      font-size: 16px;
-      outline: none;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus, input[type="password"]:focus {
-      border-color: #f59e0b;
-      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
-    }
-
-    .btn-login {
-      width: 100%;
-      background-color: #f59e0b;
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background-color 0.2s;
-      margin-bottom: 16px;
-    }
-
-    .btn-login:hover {
-      background-color: #d97706;
-    }
-
-    .forgot {
-      text-align: center;
-      color: #64748b;
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    .forgot:hover {
-      color: #f59e0b;
-    }
-
-    .error {
-      background-color: rgba(239,68,68,0.15);
-      color: #ef4444;
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      display: none;
-    }
-
-    @media (max-width: 480px) {
-      .login-container {
-        padding: 32px 24px;
-        margin: 10px;
-      }
-    }
-  </style>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FinTrack — Login</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0a0e1a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(245,158,11,0.08) 0%,transparent 70%);pointer-events:none}
+body::after{content:'';position:fixed;bottom:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(16,185,129,0.06) 0%,transparent 70%);pointer-events:none}
+.wrap{width:100%;max-width:420px;padding:24px;position:relative;z-index:1}
+.logo-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:36px}
+.logo-box{width:46px;height:46px;background:#f59e0b;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#000;letter-spacing:-1px;box-shadow:0 4px 20px rgba(245,158,11,0.4)}
+.logo-name{font-size:22px;font-weight:700;color:#e2e8f0}
+.card{background:#111827;border:1px solid #1f2d45;border-radius:24px;padding:36px 32px;box-shadow:0 25px 60px rgba(0,0,0,0.6)}
+.tab-row{display:flex;background:#0a0e1a;border-radius:12px;padding:4px;margin-bottom:28px;border:1px solid #1f2d45}
+.tab-btn{flex:1;padding:10px;border-radius:9px;border:none;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:#64748b;transition:all 0.2s}
+.tab-btn.active{background:#f59e0b;color:#000;box-shadow:0 2px 10px rgba(245,158,11,0.3)}
+.auth-form{display:none}.auth-form.active{display:block}
+.form-title{font-size:20px;font-weight:700;color:#e2e8f0;margin-bottom:6px}
+.form-sub{color:#64748b;font-size:13px;margin-bottom:24px}
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.fg-row{display:flex;justify-content:space-between;align-items:center}
+.fg label{color:#64748b;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.char-count{font-size:11px;font-weight:600;color:#64748b;font-family:'Courier New',monospace}
+.char-count.ok{color:#10b981}
+.char-count.warn{color:#f59e0b}
+.char-count.over{color:#ef4444}
+.fg input{background:#0a0e1a;border:1px solid #1f2d45;border-radius:10px;padding:12px 14px;color:#e2e8f0;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s}
+.fg input:focus{border-color:#f59e0b}
+.fg input.invalid{border-color:#ef4444!important}
+.fg input.valid{border-color:#10b981!important}
+.fg input::placeholder{color:#374151}
+.hint{font-size:11px;color:#64748b;margin-top:2px}
+.hint.error{color:#ef4444}
+.submit-btn{width:100%;padding:13px;background:#f59e0b;color:#000;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;transition:all 0.2s;box-shadow:0 4px 20px rgba(245,158,11,0.3)}
+.submit-btn:hover{background:#d97706;transform:translateY(-1px)}
+.submit-btn:disabled{background:#374151;color:#64748b;cursor:not-allowed;box-shadow:none;transform:none}
+.err{background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.err.show{display:block}
+.suc{background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.suc.show{display:block}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#374151;font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#1f2d45}
+.features-row{display:flex;gap:12px;margin-top:24px}
+.fpill{flex:1;text-align:center;background:#0a0e1a;border:1px solid #1f2d45;border-radius:12px;padding:12px 6px;font-size:11px;color:#64748b;line-height:1.5}
+.fpill span{display:block;font-size:18px;margin-bottom:4px}
+.rules-box{background:#0a0e1a;border:1px solid #1f2d45;border-radius:10px;padding:12px 14px;margin-bottom:16px}
+.rules-title{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.rule{display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;margin-bottom:4px;transition:color 0.2s}
+.rule:last-child{margin-bottom:0}
+.rule.pass{color:#10b981}
+.rule.fail{color:#ef4444}
+.rule-dot{width:6px;height:6px;border-radius:50%;background:#374151;flex-shrink:0;transition:background 0.2s}
+.rule.pass .rule-dot{background:#10b981}
+.rule.fail .rule-dot{background:#ef4444}
+</style>
 </head>
 <body>
-  <div class="login-container">
-    <div class="logo">
-      <div class="logo-icon">FT</div>
-      <span class="logo-text">FinTrack</span>
-    </div>
-
-    <h1>Welcome Back</h1>
-    <p style="text-align: center; color: #64748b; margin-bottom: 32px; font-size: 15px;">
-      Sign in to your account
-    </p>
-
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class="error" style="display: block;">
-      {{ messages[0] }}
-    </div>
-  {% endif %}
-{% endwith %}
-<div id="error-msg" class="error"></div>
-
-    <form method="POST" action="/login">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required autocomplete="username">
-      </div>
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
-      </div>
-      <button type="submit" class="btn-login">Sign In</button>
-    </form>
-
-    <div class="demo-hint">
-      💡 Demo: user / pass123
-    </div>
-
-    <a href="#" class="forgot">Forgot Password?</a>
+<div class="wrap">
+  <div class="logo-wrap">
+    <div class="logo-box">FT</div>
+    <span class="logo-name">FinTrack</span>
   </div>
+  <div class="card">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn"        onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form active" id="form-login">
+      <div class="form-title">Welcome back 👋</div>
+      <div class="form-sub">Login to your FinTrack account</div>
+      <div class="err" id="le"></div>
+      <div class="suc" id="ls"></div>
+      <div class="fg">
+        <label>Username</label>
+        <input type="text" id="lu" placeholder="Enter your username" autocomplete="username" maxlength="20">
+      </div>
+      <div class="fg">
+        <label>Password</label>
+        <input type="password" id="lp" placeholder="Enter your password" autocomplete="current-password" maxlength="32" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="submit-btn" onclick="doLogin()">Login →</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-form" id="form-register">
+      <div class="form-title">Create Account ✨</div>
+      <div class="form-sub">Join FinTrack and take control of your finances</div>
+      <div class="err" id="re"></div>
+      <div class="suc" id="rs"></div>
+
+      <!-- Name -->
+      <div class="fg">
+        <div class="fg-row">
+          <label>Full Name</label>
+          <span class="char-count" id="name-count">0 / 40</span>
+        </div>
+        <input type="text" id="rn" placeholder="e.g. Mohit Achari" maxlength="40" oninput="liveCheck()">
+        <span class="hint" id="name-hint">Min 2 · Max 40 characters</span>
+      </div>
+
+      <!-- Username -->
+      <div class="fg">
+        <div class="fg-row">
+          <label>Username</label>
+          <span class="char-count" id="user-count">0 / 20</span>
+        </div>
+        <input type="text" id="ru" placeholder="e.g. mohit123" maxlength="20" oninput="liveCheck()" autocomplete="username">
+        <span class="hint" id="user-hint">Min 3 · Max 20 · Letters, numbers, underscore only</span>
+      </div>
+
+      <!-- Password -->
+      <div class="fg">
+        <div class="fg-row">
+          <label>Password</label>
+          <span class="char-count" id="pass-count">0 / 32</span>
+        </div>
+        <input type="password" id="rp" placeholder="Choose a strong password" maxlength="32" oninput="liveCheck()" onkeydown="if(event.key==='Enter')doRegister()" autocomplete="new-password">
+        <span class="hint" id="pass-hint">Min 6 · Max 32 characters</span>
+      </div>
+
+      <!-- Rules checklist -->
+      <div class="rules-box">
+        <div class="rules-title">Requirements</div>
+        <div class="rule" id="rule-name">     <span class="rule-dot"></span> Name: 2–40 characters</div>
+        <div class="rule" id="rule-user-len"> <span class="rule-dot"></span> Username: 3–20 characters</div>
+        <div class="rule" id="rule-user-char"><span class="rule-dot"></span> Username: letters, numbers, underscore only</div>
+        <div class="rule" id="rule-pass-len"> <span class="rule-dot"></span> Password: 6–32 characters</div>
+      </div>
+
+      <button class="submit-btn" id="reg-btn" onclick="doRegister()" disabled>Create Account →</button>
+    </div>
+
+    <div class="divider">Your data is saved locally &amp; securely</div>
+    <div class="features-row">
+      <div class="fpill"><span>💰</span>EMI &amp; SIP</div>
+      <div class="fpill"><span>🎯</span>Goals</div>
+      <div class="fpill"><span>📊</span>Reports</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+  document.querySelectorAll('.auth-form').forEach(f=>f.classList.remove('active'));
+  document.getElementById('form-'+t).classList.add('active');
+  ['le','ls','re','rs'].forEach(id=>{const e=document.getElementById(id);e.classList.remove('show');e.textContent='';});
+}
+
+function showE(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.add('show');}
+function showS(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.add('show');}
+
+// LIVE VALIDATION
+function liveCheck(){
+  const n = document.getElementById('rn').value;
+  const u = document.getElementById('ru').value;
+  const p = document.getElementById('rp').value;
+
+  // Char counts
+  updateCount('name-count', n.length, 2, 40);
+  updateCount('user-count', u.length, 3, 20);
+  updateCount('pass-count', p.length, 6, 32);
+
+  // Rule checks
+  const nameOk     = n.length >= 2 && n.length <= 40;
+  const userLenOk  = u.length >= 3 && u.length <= 20;
+  const userCharOk = /^[a-zA-Z0-9_]+$/.test(u) && u.length > 0;
+  const passOk     = p.length >= 6 && p.length <= 32;
+
+  setRule('rule-name',      nameOk);
+  setRule('rule-user-len',  userLenOk);
+  setRule('rule-user-char', userCharOk);
+  setRule('rule-pass-len',  passOk);
+
+  // Input border colors
+  setInputState('rn', n.length === 0 ? 'neutral' : nameOk    ? 'valid' : 'invalid');
+  setInputState('ru', u.length === 0 ? 'neutral' : (userLenOk && userCharOk) ? 'valid' : 'invalid');
+  setInputState('rp', p.length === 0 ? 'neutral' : passOk    ? 'valid' : 'invalid');
+
+  // Hints
+  if (n.length > 0 && !nameOk)
+    setHint('name-hint', n.length < 2 ? 'Too short — min 2 characters' : 'Too long — max 40 characters', true);
+  else setHint('name-hint', 'Min 2 · Max 40 characters', false);
+
+  if (u.length > 0 && !userCharOk)
+    setHint('user-hint', 'Only letters, numbers and underscore allowed', true);
+  else if (u.length > 0 && !userLenOk)
+    setHint('user-hint', u.length < 3 ? 'Too short — min 3 characters' : 'Too long — max 20 characters', true);
+  else setHint('user-hint', 'Min 3 · Max 20 · Letters, numbers, underscore only', false);
+
+  if (p.length > 0 && !passOk)
+    setHint('pass-hint', p.length < 6 ? 'Too short — min 6 characters' : 'Too long — max 32 characters', true);
+  else setHint('pass-hint', 'Min 6 · Max 32 characters', false);
+
+  // Enable/disable button
+  document.getElementById('reg-btn').disabled = !(nameOk && userLenOk && userCharOk && passOk);
+}
+
+function updateCount(id, len, min, max){
+  const el = document.getElementById(id);
+  el.textContent = len + ' / ' + max;
+  el.className = 'char-count';
+  if (len === 0)       el.classList.add('');
+  else if (len < min)  el.classList.add('warn');
+  else if (len > max)  el.classList.add('over');
+  else                 el.classList.add('ok');
+}
+
+function setRule(id, pass){
+  const el = document.getElementById(id);
+  el.className = 'rule ' + (pass ? 'pass' : 'fail');
+}
+
+function setInputState(id, state){
+  const el = document.getElementById(id);
+  el.classList.remove('valid','invalid');
+  if (state === 'valid')   el.classList.add('valid');
+  if (state === 'invalid') el.classList.add('invalid');
+}
+
+function setHint(id, msg, isError){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = isError ? 'hint error' : 'hint';
+}
+
+async function doLogin(){
+  ['le','ls'].forEach(id=>{const e=document.getElementById(id);e.classList.remove('show');e.textContent='';});
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value;
+  if(!u||!p){showE('le','Please fill all fields.');return;}
+  try{
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
+    const d=await r.json();
+    if(d.success){showS('ls','Login successful! Redirecting...');setTimeout(()=>window.location.href='/',800);}
+    else showE('le',d.error);
+  }catch(e){showE('le','Server error. Is app.py running?');}
+}
+
+async function doRegister(){
+  ['re','rs'].forEach(id=>{const e=document.getElementById(id);e.classList.remove('show');e.textContent='';});
+  const n=document.getElementById('rn').value.trim();
+  const u=document.getElementById('ru').value.trim();
+  const p=document.getElementById('rp').value;
+  if(!n||!u||!p){showE('re','Please fill all fields.');return;}
+  try{
+    const r=await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,username:u,password:p})});
+    const d=await r.json();
+    if(d.success){showS('rs','Account created! Redirecting...');setTimeout(()=>window.location.href='/',800);}
+    else showE('re',d.error);
+  }catch(e){showE('re','Server error. Is app.py running?');}
+}
+</script>
 </body>
 </html>
