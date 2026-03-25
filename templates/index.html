@@ -4,416 +4,249 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FinTrack</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background-color: #ffffff;
-      color: #000000;
-      min-height: 100vh;
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0a0e1a;color:#e2e8f0;min-height:100vh}
 
     /* HEADER */
-    header {
-      background-color: #0a0e1a;
-      border-bottom: 1px solid #1f2d45;
-      padding: 0 32px;
-      position: sticky; top: 0; z-index: 99;
-    }
-    .header-inner {
-      max-width: 1200px; margin: 0 auto;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-    }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon {
-      width: 42px; height: 42px; background-color: #f59e0b;
-      border-radius: 10px; display: flex; align-items: center;
-      justify-content: center; font-weight: 900; font-size: 15px;
-      color: #000000; letter-spacing: -1px;
-      box-shadow: 0 2px 10px rgba(245,158,11,0.4);
-    }
-    .logo-text { font-size: 18px; font-weight: 700; color: #e2e8f0; }
+    header{background:#0a0e1a;border-bottom:1px solid #1f2d45;padding:0 32px;position:sticky;top:0;z-index:99}
+    .header-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px}
+    .logo{display:flex;align-items:center;gap:10px}
+    .logo-icon{width:42px;height:42px;background:#f59e0b;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#000;letter-spacing:-1px;box-shadow:0 2px 10px rgba(245,158,11,0.4)}
+    .logo-text{font-size:18px;font-weight:700;color:#e2e8f0}
+    nav{display:flex;gap:4px}
+    .nav-btn{background:transparent;color:#64748b;border:1px solid transparent;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .nav-btn:hover{color:#e2e8f0}
+    .nav-btn.active{background:rgba(245,158,11,0.12);color:#f59e0b;border-color:rgba(245,158,11,0.35)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .btn-primary{background:#f59e0b;color:#000;border:none;border-radius:10px;padding:9px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.2s}
+    .btn-primary:hover{background:#d97706}
+    .btn-outline{background:transparent;color:#64748b;border:1px solid #1f2d45;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .btn-outline:hover{color:#e2e8f0;border-color:#64748b}
 
-    nav { display: flex; gap: 4px; }
-    .nav-btn {
-      background: transparent; color: #64748b;
-      border: 1px solid transparent; border-radius: 10px;
-      padding: 7px 18px; font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all 0.2s;
-    }
-    .nav-btn:hover { color: #e2e8f0; }
-    .nav-btn.active {
-      background-color: rgba(245,158,11,0.12);
-      color: #f59e0b; border-color: rgba(245,158,11,0.35);
-    }
-
-    .header-actions { display: flex; gap: 8px; }
-    .btn-primary {
-      background-color: #f59e0b; color: #000; border: none;
-      border-radius: 10px; padding: 9px 20px; font-size: 13px;
-      font-weight: 700; cursor: pointer; font-family: inherit;
-      transition: background 0.2s;
-    }
-    .btn-primary:hover { background-color: #d97706; }
-    .btn-outline {
-      background: transparent; color: #64748b;
-      border: 1px solid #1f2d45; border-radius: 10px;
-      padding: 9px 16px; font-size: 13px; font-weight: 600;
-      cursor: pointer; font-family: inherit; transition: all 0.2s;
-    }
-    .btn-outline:hover { color: #e2e8f0; border-color: #64748b; }
+    /* USER CHIP */
+    .user-chip{display:flex;align-items:center;gap:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:50px;padding:6px 14px 6px 8px;font-size:13px;font-weight:600;color:#f59e0b;cursor:pointer;transition:all 0.2s;position:relative}
+    .user-chip:hover{background:rgba(245,158,11,0.18)}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:#f59e0b;color:#000;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+    .user-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:#111827;border:1px solid #1f2d45;border-radius:14px;padding:8px;min-width:180px;box-shadow:0 20px 50px rgba(0,0,0,0.6);display:none;z-index:300}
+    .user-dropdown.open{display:block}
+    .dd-header{padding:8px 12px 10px;border-bottom:1px solid #1f2d45;margin-bottom:6px}
+    .dd-header small{color:#64748b;font-size:11px;display:block}
+    .dd-header strong{color:#e2e8f0;font-size:13px}
+    .dd-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#64748b;transition:all 0.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+    .dd-item:hover{background:#1f2d45;color:#e2e8f0}
+    .dd-item.danger:hover{background:rgba(239,68,68,0.1);color:#ef4444}
 
     /* LAYOUT */
-    main { max-width: 1200px; margin: 0 auto; padding: 28px 32px; }
-    .tab { display: none; }
-    .tab.active { display: block; }
+    main{max-width:1200px;margin:0 auto;padding:28px 32px}
+    .tab{display:none}.tab.active{display:block}
+    .card{background:#151e2e;border:1px solid #1f2d45;border-radius:16px;padding:24px}
+    .card-p0{background:#151e2e;border:1px solid #1f2d45;border-radius:16px;overflow:hidden}
+    .mb-20{margin-bottom:20px}.mb-16{margin-bottom:16px}
 
-    /* CARD */
-    .card {
-      background-color: #151e2e;
-      border: 1px solid #1f2d45;
-      border-radius: 16px;
-      padding: 24px;
-    }
-    .card-p0 {
-      background-color: #151e2e;
-      border: 1px solid #1f2d45;
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    .mb-20 { margin-bottom: 20px; }
-    .mb-16 { margin-bottom: 16px; }
+    /* STATS */
+    .stat-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+    .stat-card{flex:1;min-width:160px;background:#151e2e;border:1px solid #1f2d45;border-radius:16px;padding:22px}
+    .stat-label{color:#64748b;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+    .stat-value{font-size:24px;font-weight:700;font-family:'Courier New',monospace;margin-bottom:4px}
+    .stat-sub{color:#64748b;font-size:12px}
+    .c-green{color:#10b981!important}.c-red{color:#ef4444!important}.c-blue{color:#3b82f6!important}
+    .c-amber{color:#f59e0b!important}.c-purple{color:#8b5cf6!important}.c-muted{color:#64748b;font-size:13px}
 
-    /* STAT ROW */
-    .stat-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-    .stat-card {
-      flex: 1; min-width: 160px;
-      background-color: #151e2e; border: 1px solid #1f2d45;
-      border-radius: 16px; padding: 22px;
-    }
-    .stat-label {
-      color: #bfa4a4; font-size: 11px; font-weight: 600;
-      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
-    }
-    .stat-value {
-      font-size: 24px; font-weight: 700;
-      font-family: 'Courier New', monospace; margin-bottom: 4px;
-    }
-    .stat-sub { color: #64748b; font-size: 12px; }
+    /* COMMIT BAR */
+    .commit-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .commit-title{font-weight:600;font-size:15px}
+    .commit-pct{font-family:'Courier New',monospace;font-weight:700;font-size:18px}
+    .progress-track{background:#1f2d45;border-radius:99px;height:10px;overflow:hidden;margin-bottom:16px}
+    .progress-fill{height:100%;border-radius:99px;transition:width 0.6s ease}
+    .commit-breakdown{display:flex;gap:32px}
+    .bd-label{color:#64748b;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px}
+    .bd-val{font-family:'Courier New',monospace;font-weight:600;font-size:15px}
 
-    .c-green  { color: #10b981 !important; }
-    .c-red    { color: #ef4444 !important; }
-    .c-blue   { color: #3b82f6 !important; }
-    .c-amber  { color: #f59e0b !important; }
-    .c-purple { color: #8b5cf6 !important; }
-    .c-muted  { color: #64748b; }
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 
-    /* COMMITMENT BAR */
-    .commit-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .commit-title   { font-weight: 600; font-size: 15px; }
-    .commit-pct     { font-family: 'Courier New', monospace; font-weight: 700; font-size: 18px; }
-    .progress-track { background-color: #1f2d45; border-radius: 99px; height: 10px; overflow: hidden; margin-bottom: 16px; }
-    .progress-fill  { height: 100%; border-radius: 99px; background-color: #10b981; transition: width 0.6s ease; }
-    .commit-breakdown { display: flex; gap: 32px; }
-    .bd-label { color: #64748b; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-    .bd-val   { font-family: 'Courier New', monospace; font-weight: 600; font-size: 15px; }
-
-    /* TWO COL */
-    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-    /* UPCOMING DUES */
-    .due-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #0d1626; }
-    .due-item:last-child { border-bottom: none; }
-    .due-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-    .due-meta  { color: #64748b; font-size: 12px; }
-    .due-right { display: flex; align-items: center; gap: 10px; }
-    .due-amt   { font-family: 'Courier New', monospace; font-weight: 600; font-size: 14px; }
+    /* DUES */
+    .due-item{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #1f2d45}
+    .due-item:last-child{border-bottom:none}
+    .due-name{font-weight:600;font-size:14px;margin-bottom:2px}
+    .due-meta{color:#64748b;font-size:12px}
+    .due-right{display:flex;align-items:center;gap:10px}
+    .due-amt{font-family:'Courier New',monospace;font-weight:600;font-size:14px}
 
     /* BADGE */
-    .badge { border-radius: 6px; padding: 2px 10px; font-size: 11px; font-weight: 700; }
-    .badge-EMI     { background: rgba(239,68,68,0.15);  color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
-    .badge-SIP     { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-    .badge-Expense { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+    .badge{border-radius:6px;padding:2px 10px;font-size:11px;font-weight:700}
+    .badge-EMI{background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3)}
+    .badge-SIP{background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)}
+    .badge-Expense{background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.3)}
 
-    /* ENTRIES */
-    .entries-bar  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .filter-group { display: flex; gap: 8px; }
-    .filter-btn   { background: transparent; color: #64748b; border: 1px solid #1f2d45; border-radius: 8px; padding: 6px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s; }
-    .fa-all       { color: #f59e0b; background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.35); }
-    .fa-emi       { color: #ef4444; background: rgba(239,68,68,0.12);  border-color: rgba(239,68,68,0.35); }
-    .fa-sip       { color: #10b981; background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.35); }
-    .fa-expense   { color: #3b82f6; background: rgba(59,130,246,0.12); border-color: rgba(59,130,246,0.35); }
-
-    table { width: 100%; border-collapse: collapse; }
-    thead tr { background-color: #0a0e1a; border-bottom: 1px solid #1f2d45; }
-    th { padding: 13px 18px; text-align: left; color: #64748b; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; white-space: nowrap; }
-    tbody tr { border-bottom: 1px solid #1f2d45; transition: background 0.15s; }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background-color: rgba(255,255,255,0.02); }
-    tbody tr.alt-row { background-color: rgba(10,14,26,0.4); }
-    td { padding: 13px 18px; font-size: 14px; color: #e2e8f0; }
-    .td-name   { font-weight: 600; }
-    .td-amount { font-family: 'Courier New', monospace; color: #f59e0b; font-weight: 600; }
-    .td-meta   { color: #64748b; font-size: 13px; }
-    .btn-remove { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .btn-remove:hover { background: rgba(239,68,68,0.25); }
-    .empty-state { padding: 40px; text-align: center; color: #64748b; font-size: 14px; display: none; }
+    /* ENTRIES TABLE */
+    .entries-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .filter-group{display:flex;gap:8px}
+    .filter-btn{background:transparent;color:#64748b;border:1px solid #1f2d45;border-radius:8px;padding:6px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+    .fa-all{color:#f59e0b;background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.35)}
+    .fa-emi{color:#ef4444;background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.35)}
+    .fa-sip{color:#10b981;background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.35)}
+    .fa-expense{color:#3b82f6;background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.35)}
+    table{width:100%;border-collapse:collapse}
+    thead tr{background:#0a0e1a;border-bottom:1px solid #1f2d45}
+    th{padding:13px 18px;text-align:left;color:#64748b;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap}
+    tbody tr{border-bottom:1px solid #1f2d45;transition:background 0.15s}
+    tbody tr:last-child{border-bottom:none}
+    tbody tr:hover{background:rgba(255,255,255,0.02)}
+    tbody tr.alt-row{background:rgba(10,14,26,0.4)}
+    td{padding:13px 18px;font-size:14px;color:#e2e8f0}
+    .td-name{font-weight:600}.td-amount{font-family:'Courier New',monospace;color:#f59e0b;font-weight:600}.td-meta{color:#64748b;font-size:13px}
+    .btn-remove{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+    .btn-remove:hover{background:rgba(239,68,68,0.25)}
+    .empty-state{padding:40px;text-align:center;color:#64748b;font-size:14px;display:none}
 
     /* GOALS */
-    .goals-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .goals-topbar h2 { font-size: 20px; font-weight: 700; }
-    .goals-topbar p  { color: #64748b; font-size: 13px; margin-top: 2px; }
+    .goals-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .goals-topbar h2{font-size:20px;font-weight:700}
+    .goals-topbar p{color:#64748b;font-size:13px;margin-top:2px}
+    .summary-box{background:linear-gradient(135deg,rgba(245,158,11,0.07),rgba(59,130,246,0.07));border:1px solid #1f2d45;border-radius:16px;padding:22px;margin-bottom:24px}
+    .summary-box-title{font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+    .summary-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(31,45,69,0.6)}
+    .summary-row:last-child{border-bottom:none}
+    .summary-key{color:#64748b;font-size:13px}
+    .summary-val{font-family:'Courier New',monospace;font-size:13px;font-weight:700}
+    .goals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+    .goal-card{background:#151e2e;border:1px solid #1f2d45;border-radius:16px;padding:22px;position:relative}
+    .goal-icon{font-size:30px;margin-bottom:10px}
+    .goal-name{font-size:16px;font-weight:700;margin-bottom:4px}
+    .goal-deadline{color:#64748b;font-size:12px;margin-bottom:16px}
+    .goal-amounts{display:flex;justify-content:space-between;margin-bottom:8px}
+    .goal-saved{font-family:'Courier New',monospace;font-size:15px;font-weight:700;color:#10b981}
+    .goal-target{font-family:'Courier New',monospace;font-size:13px;color:#64748b}
+    .goal-prog-track{background:#1f2d45;border-radius:99px;height:8px;margin-bottom:6px}
+    .goal-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#10b981,#3b82f6);transition:width 0.6s ease}
+    .goal-pct-row{display:flex;justify-content:space-between;margin-bottom:16px}
+    .goal-pct{color:#10b981;font-size:12px;font-weight:700}
+    .goal-months{color:#64748b;font-size:12px}
+    .goal-actions{display:flex;gap:8px}
+    .btn-deposit{flex:1;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-deposit:hover{background:rgba(16,185,129,0.25)}
+    .btn-del-goal{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-del-goal:hover{background:rgba(239,68,68,0.25)}
+    .goal-done-tag{position:absolute;top:16px;right:16px;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.4);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700}
+    .add-goal-card{background:#151e2e;border:2px dashed #1f2d45;border-radius:16px;padding:40px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;color:#64748b;font-size:14px;font-weight:600;transition:all 0.2s}
+    .add-goal-card:hover{border-color:#f59e0b;color:#f59e0b}
+    .add-goal-card span{font-size:28px}
 
-    .summary-box {
-      background: linear-gradient(135deg, rgba(245,158,11,0.07), rgba(59,130,246,0.07));
-      border: 1px solid #1f2d45; border-radius: 16px;
-      padding: 22px; margin-bottom: 24px;
-    }
-    .summary-box-title { font-size: 13px; font-weight: 700; color: #f59e0b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
-    .summary-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(31,45,69,0.6); }
-    .summary-row:last-child { border-bottom: none; }
-    .summary-key { color: #64748b; font-size: 13px; }
-    .summary-val { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; }
-
-    .goals-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-
-    .goal-card {
-      background-color: #151e2e; border: 1px solid #1f2d45;
-      border-radius: 16px; padding: 22px; position: relative;
-    }
-    .goal-icon     { font-size: 30px; margin-bottom: 10px; }
-    .goal-name     { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .goal-deadline { color: #64748b; font-size: 12px; margin-bottom: 16px; }
-
-    .goal-amounts  { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .goal-saved    { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 700; color: #10b981; }
-    .goal-target   { font-family: 'Courier New', monospace; font-size: 13px; color: #64748b; }
-
-    .goal-prog-track { background-color: #1f2d45; border-radius: 99px; height: 8px; margin-bottom: 6px; }
-    .goal-prog-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 0.6s ease; }
-
-    .goal-pct-row  { display: flex; justify-content: space-between; margin-bottom: 16px; }
-    .goal-pct      { color: #10b981; font-size: 12px; font-weight: 700; }
-    .goal-months   { color: #64748b; font-size: 12px; }
-
-    .goal-actions  { display: flex; gap: 8px; }
-    .btn-deposit {
-      flex: 1; background: rgba(16,185,129,0.15); color: #10b981;
-      border: 1px solid rgba(16,185,129,0.3); border-radius: 8px;
-      padding: 8px 14px; font-size: 13px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-    }
-    .btn-deposit:hover { background: rgba(16,185,129,0.25); }
-    .btn-del-goal {
-      background: rgba(239,68,68,0.12); color: #ef4444;
-      border: 1px solid rgba(239,68,68,0.25); border-radius: 8px;
-      padding: 8px 14px; font-size: 13px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-    }
-    .btn-del-goal:hover { background: rgba(239,68,68,0.25); }
-
-    .goal-done-tag {
-      position: absolute; top: 16px; right: 16px;
-      background: rgba(16,185,129,0.2); color: #10b981;
-      border: 1px solid rgba(16,185,129,0.4);
-      border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 700;
-    }
-
-    .add-goal-card {
-      background-color: #151e2e; border: 2px dashed #1f2d45;
-      border-radius: 16px; padding: 40px 20px;
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 10px; cursor: pointer;
-      color: #64748b; font-size: 14px; font-weight: 600;
-      transition: all 0.2s;
-    }
-    .add-goal-card:hover { border-color: #f59e0b; color: #f59e0b; }
-    .add-goal-card span  { font-size: 28px; }
+    /* REPORTS */
+    .report-stat-row{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+    .report-stat{flex:1;min-width:120px;background:#151e2e;border:1px solid #1f2d45;border-radius:14px;padding:18px;text-align:center}
+    .report-stat-val{font-family:'Courier New',monospace;font-size:20px;font-weight:700;margin-bottom:4px}
+    .report-stat-lbl{color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+    .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+    .chart-box{background:#151e2e;border:1px solid #1f2d45;border-radius:16px;padding:24px}
+    .chart-title{font-weight:600;font-size:15px;margin-bottom:4px}
+    .chart-sub{color:#64748b;font-size:12px;margin-bottom:16px}
+    .chart-area{position:relative;height:260px;display:flex;align-items:center;justify-content:center}
+    .rp-item{margin-bottom:16px}
+    .rp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .rp-name{font-size:13px;font-weight:600}
+    .rp-val{font-family:'Courier New',monospace;font-size:13px;font-weight:600}
+    .rp-track{background:#1f2d45;border-radius:99px;height:6px;margin-bottom:4px}
+    .rp-fill{height:100%;border-radius:99px}
+    .rp-sub{color:#64748b;font-size:11px}
+    .section-title{font-weight:600;font-size:15px;color:#e2e8f0}
+    .section-sub{color:#64748b;font-size:13px;margin:4px 0 16px}
+    .no-data{text-align:center;color:#64748b;font-size:14px;padding:40px 0;line-height:1.8}
+    .no-data b{color:#f59e0b}
 
     /* MODAL */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 200; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background-color: #111827; border: 1px solid #1f2d45;
-      border-radius: 20px; padding: 32px; width: 460px; max-width: 96vw;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
-    }
-    .modal h3 { font-size: 20px; font-weight: 700; color: #e2e8f0; margin-bottom: 24px; }
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:#111827;border:1px solid #1f2d45;border-radius:20px;padding:32px;width:460px;max-width:96vw;box-shadow:0 25px 60px rgba(0,0,0,0.7)}
+    .modal h3{font-size:20px;font-weight:700;color:#e2e8f0;margin-bottom:24px}
+    .type-row{display:flex;gap:8px;margin-bottom:20px}
+    .type-btn{flex:1;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;background:#0a0e1a;color:#64748b;border:1px solid #1f2d45;font-family:inherit;transition:all 0.2s}
+    .t-emi{color:#ef4444;background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.45)}
+    .t-sip{color:#10b981;background:rgba(16,185,129,0.18);border-color:rgba(16,185,129,0.45)}
+    .t-expense{color:#3b82f6;background:rgba(59,130,246,0.18);border-color:rgba(59,130,246,0.45)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+    .fg{display:flex;flex-direction:column;gap:6px}
+    .fg.full{grid-column:1/-1}
+    .fg label{color:#64748b;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+    .fg input,.fg select{background:#0a0e1a;border:1px solid #1f2d45;border-radius:10px;padding:10px 14px;color:#e2e8f0;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s}
+    .fg input:focus,.fg select:focus{border-color:#f59e0b}
+    .fg select option{background:#111827;color:#e2e8f0}
+    .modal-actions{display:flex;gap:12px}
+    .modal-actions .btn-outline{flex:1;text-align:center}
+    .modal-actions .btn-primary{flex:2}
+    .emoji-row{display:flex;gap:8px;flex-wrap:wrap}
+    .emoji-opt{width:38px;height:38px;border-radius:8px;font-size:20px;background:#0a0e1a;border:1px solid #1f2d45;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
+    .emoji-opt.selected{border-color:#f59e0b;background:rgba(245,158,11,0.15)}
 
-    .type-row { display: flex; gap: 8px; margin-bottom: 20px; }
-    .type-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; background: #0a0e1a; color: #64748b; border: 1px solid #1f2d45; font-family: inherit; transition: all 0.2s; }
-    .t-emi     { color: #ef4444; background: rgba(239,68,68,0.18);  border-color: rgba(239,68,68,0.45); }
-    .t-sip     { color: #10b981; background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.45); }
-    .t-expense { color: #3b82f6; background: rgba(59,130,246,0.18); border-color: rgba(59,130,246,0.45); }
-
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-    .fg { display: flex; flex-direction: column; gap: 6px; }
-    .fg.full { grid-column: 1 / -1; }
-    .fg label { color: #64748b; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-    .fg input, .fg select {
-      background-color: #0a0e1a; border: 1px solid #1f2d45; border-radius: 10px;
-      padding: 10px 14px; color: #e2e8f0; font-size: 14px; outline: none;
-      font-family: inherit; width: 100%;
-    }
-    .fg input:focus, .fg select:focus { border-color: #f59e0b; }
-    .fg select option { background-color: #111827; color: #e2e8f0; }
-
-    .modal-actions { display: flex; gap: 12px; }
-    .modal-actions .btn-outline { flex: 1; text-align: center; }
-    .modal-actions .btn-primary { flex: 2; }
-
-    .emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .emoji-opt {
-      width: 38px; height: 38px; border-radius: 8px; font-size: 20px;
-      background: #0a0e1a; border: 1px solid #1f2d45;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .emoji-opt.selected { border-color: #f59e0b; background: rgba(245,158,11,0.15); }
-
-    @media (max-width: 768px) {
-      .two-col { grid-template-columns: 1fr; }
-      .stat-row { flex-direction: column; }
-      main { padding: 16px; }
-      header { padding: 0 16px; }
+    @media(max-width:768px){
+      .two-col,.charts-grid,.three-col{grid-template-columns:1fr}
+      .stat-row,.report-stat-row{flex-direction:column}
+      main{padding:16px}
+      header{padding:0 16px}
+      nav{gap:2px}
+      .nav-btn{padding:6px 10px;font-size:12px}
     }
   </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="header-inner">
     <div class="logo">
       <div class="logo-icon">FT</div>
       <span class="logo-text">FinTrack</span>
-      
     </div>
     <nav>
       <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="nav-btn" data-tab="entries"   onclick="switchTab('entries')">Entries</button>
-      <button class="nav-btn" data-tab="goals" onclick="switchTab('goals')">Goals</button>
-<button class="nav-btn" data-tab="recommendations" onclick="switchTab('recommendations')">Recommendations</button>
-<button class="nav-btn" data-tab="reports" onclick="switchTab('reports');loadReports()">Reports</button>
+      <button class="nav-btn" data-tab="entries"          onclick="switchTab('entries')">Entries</button>
+      <button class="nav-btn" data-tab="goals"            onclick="switchTab('goals')">Goals</button>
+      <button class="nav-btn" data-tab="reports"          onclick="switchTab('reports')">Reports</button>
     </nav>
-<div class="header-actions">
-      <a href="/logout" class="btn-outline">Logout</a>
+    <div class="header-right">
       <button class="btn-outline" onclick="openIncomeModal()">Set Income</button>
-      <button class="btn-primary" onclick="openAddModal()">+ Add Entry</button>
+      <button class="btn-primary"  onclick="openAddModal()">+ Add Entry</button>
+      <div class="user-chip" onclick="toggleDD(event)">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span id="userName">User</span>
+        <span style="font-size:10px;opacity:0.6">▼</span>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="dd-header"><small>Logged in as</small><strong id="ddName">—</strong></div>
+          <button class="dd-item" onclick="switchTab('dashboard')">🏠 Dashboard</button>
+          <button class="dd-item" onclick="switchTab('reports')">📊 Reports</button>
+          <button class="dd-item danger" onclick="doLogout()">👋 Logout</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
-
-<!-- RECOMMENDATIONS -->
-<div id="tab-recommendations" class="tab" style="background-color:#0a0e1a;min-height:100vh;">
-  <div style="margin-bottom:24px">
-    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">AI Recommendations</h2>
-    <p style="color:#64748b;font-size:13px">Based on your income and expenses</p>
-  </div>
-
-  <!-- Score Card -->
-  <div class="stat-row">
-    <div class="stat-card">
-      <div class="stat-label">Financial Health Score</div>
-      <div class="stat-value" id="rec-score" style="font-size:40px">--</div>
-      <div class="stat-sub" id="rec-grade">Not calculated yet</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Free Cash</div>
-      <div class="stat-value c-green" id="rec-free">Rs. 0</div>
-      <div class="stat-sub">After all expenses</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Total EMI</div>
-      <div class="stat-value c-red" id="rec-emi">Rs. 0</div>
-      <div class="stat-sub">Monthly loan payments</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Total SIP</div>
-      <div class="stat-value c-green" id="rec-sip">Rs. 0</div>
-      <div class="stat-sub">Monthly investments</div>
-    </div>
-  </div>
-
-  <!-- Warnings -->
-  <div class="card mb-20">
-    <div style="font-weight:600;font-size:15px;margin-bottom:16px;color:#ef4444">⚠ Warnings</div>
-    <div id="rec-warnings"><p style="color:#64748b">No warnings. Good job!</p></div>
-  </div>
-
-  <!-- Suggestions -->
-  <div class="card mb-20">
-    <div style="font-weight:600;font-size:15px;margin-bottom:16px;color:#10b981">💡 Suggestions</div>
-    <div id="rec-suggestions"><p style="color:#64748b">Add your income and entries to get suggestions.</p></div>
-  </div>
-
-  <button class="btn-primary" onclick="loadRecommendations()">Refresh Recommendations</button>
-</div>
 
 <main>
 
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab active">
-
     <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-label">Monthly Income</div>
-        <div class="stat-value c-green" id="s-income">Rs. 0</div>
-        <div class="stat-sub">Take-home salary</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Outflow</div>
-        <div class="stat-value c-red" id="s-outflow">Rs. 0</div>
-        <div class="stat-sub" id="s-ratio-sub">0% of income</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Free Cash</div>
-        <div class="stat-value c-green" id="s-free">Rs. 0</div>
-        <div class="stat-sub" id="s-free-sub">Available to save/spend</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">SIP Investments</div>
-        <div class="stat-value c-blue" id="s-sip">Rs. 0</div>
-        <div class="stat-sub">Monthly savings</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Active Goals</div>
-        <div class="stat-value c-purple" id="s-goals">0</div>
-        <div class="stat-sub">Savings targets</div>
-      </div>
+      <div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value c-green" id="s-income">Rs. 0</div><div class="stat-sub">Take-home salary</div></div>
+      <div class="stat-card"><div class="stat-label">Total Outflow</div><div class="stat-value c-red" id="s-outflow">Rs. 0</div><div class="stat-sub" id="s-ratio-sub">0% of income</div></div>
+      <div class="stat-card"><div class="stat-label">Free Cash</div><div class="stat-value c-green" id="s-free">Rs. 0</div><div class="stat-sub" id="s-free-sub">Available to save/spend</div></div>
+      <div class="stat-card"><div class="stat-label">SIP Investments</div><div class="stat-value c-blue" id="s-sip">Rs. 0</div><div class="stat-sub">Monthly savings</div></div>
+      <div class="stat-card"><div class="stat-label">Active Goals</div><div class="stat-value c-purple" id="s-goals">0</div><div class="stat-sub">Savings targets</div></div>
     </div>
-
     <div class="card mb-20">
-      <div class="commit-header">
-        <span class="commit-title">Income Commitment Ratio</span>
-        <span class="commit-pct" id="commit-pct">0%</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill" id="commit-bar" style="width:0%"></div>
-      </div>
+      <div class="commit-header"><span class="commit-title">Income Commitment Ratio</span><span class="commit-pct" id="commit-pct">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="commit-bar" style="width:0%;background:#10b981"></div></div>
       <div class="commit-breakdown">
-        <div><div class="bd-label">EMI</div><div class="bd-val c-red"   id="bd-emi">Rs. 0</div></div>
+        <div><div class="bd-label">EMI</div><div class="bd-val c-red" id="bd-emi">Rs. 0</div></div>
         <div><div class="bd-label">SIP</div><div class="bd-val c-green" id="bd-sip">Rs. 0</div></div>
         <div><div class="bd-label">Expenses</div><div class="bd-val c-blue" id="bd-exp">Rs. 0</div></div>
       </div>
     </div>
-
     <div class="two-col">
-      <!-- EMI Summary -->
-      <div class="card">
-        <div style="font-weight:600;font-size:15px;margin-bottom:4px">EMI Summary</div>
-        <div style="color:#64748b;font-size:13px;margin-bottom:16px">Active loans</div>
-        <div id="dash-emi"><p class="c-muted">No EMIs added.</p></div>
-      </div>
-      <!-- Upcoming Dues -->
-      <div class="card">
-        <div style="font-weight:600;font-size:15px;margin-bottom:16px">Upcoming Due Dates</div>
-        <div id="upcoming-list"><p class="c-muted">No upcoming dues this month.</p></div>
-      </div>
+      <div class="card"><div class="section-title mb-16">EMI Summary</div><div id="dash-emi"><p class="c-muted">No EMIs added.</p></div></div>
+      <div class="card"><div class="section-title mb-16">Upcoming Due Dates</div><div id="upcoming-list"><p class="c-muted">No upcoming dues this month.</p></div></div>
     </div>
-
   </div>
 
   <!-- ENTRIES -->
@@ -429,12 +262,7 @@
     </div>
     <div class="card-p0">
       <table>
-        <thead>
-          <tr>
-            <th>Name</th><th>Type</th><th>Amount</th>
-            <th>Due Date</th><th>Details</th><th></th>
-          </tr>
-        </thead>
+        <thead><tr><th>Name</th><th>Type</th><th>Amount</th><th>Due Date</th><th>Details</th><th></th></tr></thead>
         <tbody id="entries-tbody"></tbody>
       </table>
       <div class="empty-state" id="entries-empty">No entries found.</div>
@@ -444,77 +272,76 @@
   <!-- GOALS -->
   <div id="tab-goals" class="tab">
     <div class="goals-topbar">
-      <div>
-        <h2>Savings Goals</h2>
-        <p>Track your trips, purchases and life targets</p>
-      </div>
+      <div><h2>Savings Goals</h2><p>Track your trips, purchases and life targets</p></div>
       <button class="btn-primary" onclick="openGoalModal()">+ New Goal</button>
     </div>
-
     <div class="summary-box" id="goals-summary" style="display:none">
       <div class="summary-box-title">Goals Overview</div>
-      <div class="summary-row"><span class="summary-key">Total Goal Amount</span><span class="summary-val c-amber"  id="g-total-target">Rs. 0</span></div>
-      <div class="summary-row"><span class="summary-key">Total Saved So Far</span><span class="summary-val c-green"  id="g-total-saved">Rs. 0</span></div>
-      <div class="summary-row"><span class="summary-key">Still Needed</span><span class="summary-val c-red"    id="g-total-needed">Rs. 0</span></div>
-      <div class="summary-row"><span class="summary-key">Monthly Allocation</span><span class="summary-val c-blue"  id="g-monthly-needed">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Total Goal Amount</span><span class="summary-val c-amber" id="g-total-target">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Total Saved So Far</span><span class="summary-val c-green" id="g-total-saved">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Still Needed</span><span class="summary-val c-red" id="g-total-needed">Rs. 0</span></div>
+      <div class="summary-row"><span class="summary-key">Monthly Allocation</span><span class="summary-val c-blue" id="g-monthly-needed">Rs. 0</span></div>
+    </div>
+    <div class="goals-grid" id="goals-grid">
+      <div class="add-goal-card" onclick="openGoalModal()"><span>＋</span>Add Your First Goal</div>
+    </div>
+  </div>
+
+  <!-- REPORTS -->
+  <div id="tab-reports" class="tab">
+    <div class="report-stat-row">
+      <div class="report-stat"><div class="report-stat-val c-green" id="r-income">Rs. 0</div><div class="report-stat-lbl">Income</div></div>
+      <div class="report-stat"><div class="report-stat-val c-red" id="r-outflow">Rs. 0</div><div class="report-stat-lbl">Outflow</div></div>
+      <div class="report-stat"><div class="report-stat-val" id="r-free">Rs. 0</div><div class="report-stat-lbl">Free Cash</div></div>
+      <div class="report-stat"><div class="report-stat-val c-amber" id="r-ratio">0%</div><div class="report-stat-lbl">Commitment</div></div>
+      <div class="report-stat"><div class="report-stat-val c-red" id="r-emi-total">Rs. 0</div><div class="report-stat-lbl">EMI Total</div></div>
+      <div class="report-stat"><div class="report-stat-val c-green" id="r-sip-total">Rs. 0</div><div class="report-stat-lbl">SIP Total</div></div>
     </div>
 
-    <div class="goals-grid" id="goals-grid">
-      <div class="add-goal-card" onclick="openGoalModal()">
-        <span>＋</span>Add Your First Goal
+    <!-- PIE + BAR side by side -->
+    <div class="charts-grid mb-20">
+      <div class="chart-box">
+        <div class="chart-title">Outflow Breakdown</div>
+        <div class="chart-sub">EMI vs SIP vs Expenses (Pie Chart)</div>
+        <div class="chart-area" id="pie-wrap">
+          <div class="no-data">No entries yet.<br><b>Add entries</b> to see chart.</div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Monthly Category Comparison</div>
+        <div class="chart-sub">6-month projection (Bar Chart)</div>
+        <div class="chart-area"><canvas id="bar-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Horizontal expense bar + EMI/SIP progress -->
+    <div class="two-col mb-20">
+      <div class="card">
+        <div class="section-title">Expense by Category</div>
+        <div class="section-sub">Horizontal breakdown</div>
+        <div style="height:220px"><canvas id="expense-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title">SIP Corpus Tracker</div>
+        <div class="section-sub">Total invested per fund</div>
+        <div style="height:220px"><canvas id="sip-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- EMI + SIP text progress -->
+    <div class="two-col">
+      <div class="card">
+        <div class="section-title">EMI Repayment Progress</div>
+        <div class="section-sub">Loan payoff tracking</div>
+        <div id="emi-report"><p class="c-muted">No EMIs added.</p></div>
+      </div>
+      <div class="card">
+        <div class="section-title">SIP Investment Progress</div>
+        <div class="section-sub">Duration & corpus</div>
+        <div id="sip-report"><p class="c-muted">No SIPs added.</p></div>
       </div>
     </div>
   </div>
-
-<!-- REPORTS -->
-<div id="tab-reports" class="tab">
-  <div style="margin-bottom:24px">
-    <h2 style="font-size:20px;font-weight:700;margin-bottom:4px">Financial Reports</h2>
-    <p style="color:#64748b;font-size:13px">Visual summary of your finances</p>
-  </div>
-
-  <!-- Summary Cards -->
-  <div class="stat-row">
-    <div class="stat-card">
-      <div class="stat-label">Monthly Income</div>
-      <div class="stat-value c-green" id="rp-income">Rs. 0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Total Expenses</div>
-      <div class="stat-value c-red" id="rp-total">Rs. 0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Free Cash</div>
-      <div class="stat-value c-green" id="rp-free">Rs. 0</div>
-    </div>
-  </div>
-
-  <div class="two-col mb-20">
-    <!-- Bar Chart -->
-    <div class="card">
-      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Income vs Expenses</div>
-      <canvas id="barChart" height="220"></canvas>
-    </div>
-    <!-- Donut Chart -->
-    <div class="card">
-      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Expense Breakdown</div>
-      <canvas id="donutChart" height="220"></canvas>
-    </div>
-  </div>
-
-  <div class="two-col">
-    <!-- Goals Bar Chart -->
-    <div class="card">
-      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Goals Progress</div>
-      <canvas id="goalChart" height="220"></canvas>
-    </div>
-    <!-- Monthly Allocation Pie -->
-    <div class="card">
-      <div style="font-weight:600;font-size:15px;margin-bottom:16px">Monthly Allocation</div>
-      <canvas id="pieChart" height="220"></canvas>
-    </div>
-  </div>
-</div>
 
 </main>
 
@@ -532,15 +359,12 @@
       <div class="fg full"><label>Name</label><input type="text" id="f-name" placeholder="e.g. Home Loan"></div>
       <div class="fg"><label>Monthly Amount (Rs.)</label><input type="number" id="f-amount" placeholder="0" min="1"></div>
       <div class="fg"><label>Due Date (1-31)</label><input type="number" id="f-due" placeholder="5" min="1" max="31"></div>
-      <!-- EMI -->
       <div class="fg emi-f"><label>Total Tenure (months)</label><input type="number" id="f-tenure" placeholder="240"></div>
       <div class="fg emi-f"><label>Remaining (months)</label><input type="number" id="f-remaining" placeholder="200"></div>
       <div class="fg full emi-f"><label>Bank / Lender</label><input type="text" id="f-bank" placeholder="SBI, HDFC..."></div>
-      <!-- SIP -->
       <div class="fg sip-f" style="display:none"><label>Duration (months)</label><input type="number" id="f-duration" placeholder="36"></div>
       <div class="fg sip-f" style="display:none"><label>Months Elapsed</label><input type="number" id="f-elapsed" placeholder="0"></div>
       <div class="fg full sip-f" style="display:none"><label>Fund House</label><input type="text" id="f-fund" placeholder="UTI, Axis..."></div>
-      <!-- Expense -->
       <div class="fg full exp-f" style="display:none">
         <label>Category</label>
         <select id="f-category">
@@ -578,7 +402,7 @@
     <div class="form-grid">
       <div class="fg full">
         <label>Pick an Icon</label>
-        <div class="emoji-row" id="emoji-row">
+        <div class="emoji-row">
           <div class="emoji-opt selected" onclick="selectEmoji(this,'✈️')">✈️</div>
           <div class="emoji-opt" onclick="selectEmoji(this,'🏖️')">🏖️</div>
           <div class="emoji-opt" onclick="selectEmoji(this,'🏔️')">🏔️</div>
@@ -592,7 +416,7 @@
         </div>
         <input type="hidden" id="g-icon" value="✈️">
       </div>
-      <div class="fg full"><label>Goal Name</label><input type="text" id="g-name" placeholder="e.g. Europe Trip, New Laptop..."></div>
+      <div class="fg full"><label>Goal Name</label><input type="text" id="g-name" placeholder="e.g. Europe Trip..."></div>
       <div class="fg"><label>Target Amount (Rs.)</label><input type="number" id="g-target" placeholder="100000" min="1"></div>
       <div class="fg"><label>Already Saved (Rs.)</label><input type="number" id="g-saved" placeholder="0" min="0"></div>
       <div class="fg"><label>Monthly Saving (Rs.)</label><input type="number" id="g-monthly" placeholder="5000" min="0"></div>
@@ -620,8 +444,6 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="/static/app.js"></script>
+<script src="/static/js/app.js"></script>
 </body>
 </html>
