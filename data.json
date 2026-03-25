@@ -1,5 +1,19 @@
 {
   "income": 50000,
   "entries": [],
-  "goals": []
+  "goals": [],
+  "users": {
+    "sahil123": {
+      "name": "Sahil Subhash Kavankar",
+      "password": "9655860e75a629d7e011af8533a18720203ac1d13da899521945340c4f49db28",
+      "created": "2026-03-25T18:34:27.505316"
+    }
+  },
+  "user_data": {
+    "sahil123": {
+      "income": 0,
+      "entries": [],
+      "goals": []
+    }
+  }
 }
