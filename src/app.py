@@ -1,195 +1,127 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
-from functools import wraps
-import json, os
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+import json, os, hashlib, secrets
 from datetime import datetime
 
-app = Flask(__name__, template_folder="../templates", static_folder="../static")
-app.secret_key = 'fintrack-prototype-key-change-in-prod'
+app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)
 DATA_FILE = "data.json"
 
 def load():
     if os.path.exists(DATA_FILE):
-        with open(DATA_FILE) as f:
-            return json.load(f)
-    return { "income": 0, "entries": [], "goals": [] }
+        with open(DATA_FILE) as f: return json.load(f)
+    return {"users": {}, "user_data": {}}
 
 def save(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    with open(DATA_FILE, "w") as f: json.dump(data, f, indent=2)
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('logged_in'):
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+def hash_pw(pw): return hashlib.sha256(pw.encode()).hexdigest()
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        if username == "user" and password == "pass123":
-            session["logged_in"] = True
-            return redirect(url_for("index"))
-        flash("Invalid username or password!")
-    return render_template("login.html")
+def get_udata(u):
+    data = load()
+    if u not in data.get("user_data", {}):
+        data.setdefault("user_data", {})[u] = {"income":0,"entries":[],"goals":[]}
+        save(data)
+    return data["user_data"][u]
 
-@app.route("/logout")
-def logout():
-    session.pop("logged_in", None)
-    flash("Logged out successfully!")
-    return redirect(url_for("login"))
+def save_udata(u, ud):
+    data = load(); data.setdefault("user_data",{})[u] = ud; save(data)
+
+def ok(): return "username" in session
 
 @app.route("/")
-@login_required
 def index():
-    return render_template("index.html")
+    if not ok(): return redirect(url_for("login_page"))
+    return render_template("index.html", username=session["username"], name=session.get("name",""))
+
+@app.route("/login")
+def login_page():
+    if ok(): return redirect(url_for("index"))
+    return render_template("login.html")
+
+@app.route("/api/register", methods=["POST"])
+def register():
+    b = request.json
+    u = b.get("username","").strip().lower()
+    p = b.get("password","")
+    n = b.get("name","").strip()
+    if not u or not p or not n: return jsonify({"success":False,"error":"Please fill all fields."})
+    if len(u) < 3:  return jsonify({"success":False,"error":"Username must be at least 3 characters."})
+    if len(u) > 20: return jsonify({"success":False,"error":"Username must be at most 20 characters."})
+    if not u.replace('_','').isalnum(): return jsonify({"success":False,"error":"Username can only contain letters, numbers and underscore."})
+    if len(p) < 6:  return jsonify({"success":False,"error":"Password must be at least 6 characters."})
+    if len(p) > 32: return jsonify({"success":False,"error":"Password must be at most 32 characters."})
+    if len(n) < 2:  return jsonify({"success":False,"error":"Name must be at least 2 characters."})
+    if len(n) > 40: return jsonify({"success":False,"error":"Name must be at most 40 characters."})
+    data = load(); data.setdefault("users",{})
+    if u in data["users"]: return jsonify({"success":False,"error":"Username already taken."})
+    data["users"][u] = {"name":n,"password":hash_pw(p),"created":datetime.now().isoformat()}
+    data.setdefault("user_data",{})[u] = {"income":0,"entries":[],"goals":[]}
+    save(data); session["username"]=u; session["name"]=n
+    return jsonify({"success":True})
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    b = request.json
+    u = b.get("username","").strip().lower()
+    p = b.get("password","")
+    if not u or not p: return jsonify({"success":False,"error":"Please fill all fields."})
+    data = load(); users = data.get("users",{})
+    if u not in users: return jsonify({"success":False,"error":"User not found. Please register."})
+    if users[u]["password"] != hash_pw(p): return jsonify({"success":False,"error":"Incorrect password."})
+    session["username"]=u; session["name"]=users[u]["name"]
+    return jsonify({"success":True})
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear(); return jsonify({"success":True})
 
 @app.route("/api/data")
 def get_data():
-    if not session.get('logged_in'):
-        return jsonify({"error": "login_required"}), 401
-    data = load()
-    if "goals" not in data:
-        data["goals"] = []
-    return jsonify(data)
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); ud.setdefault("goals",[])
+    ud["name"] = session.get("name",session["username"]); return jsonify(ud)
 
 @app.route("/api/income", methods=["POST"])
-@login_required
 def set_income():
-    data = load()
-    data["income"] = request.json.get("income", 0)
-    save(data)
-    return jsonify({"success": True})
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); ud["income"]=request.json.get("income",0)
+    save_udata(session["username"],ud); return jsonify({"success":True})
 
 @app.route("/api/entries", methods=["POST"])
-@login_required
 def add_entry():
-    data = load()
-    entry = request.json
-    entry["id"]      = int(datetime.now().timestamp() * 1000)
-    entry["amount"]  = float(entry["amount"])
-    entry["dueDate"] = int(entry["dueDate"])
-    data["entries"].append(entry)
-    save(data)
-    return jsonify({"success": True, "entry": entry})
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); e = request.json
+    e["id"]=int(datetime.now().timestamp()*1000); e["amount"]=float(e["amount"]); e["dueDate"]=int(e["dueDate"])
+    ud["entries"].append(e); save_udata(session["username"],ud); return jsonify({"success":True,"entry":e})
 
 @app.route("/api/entries/<int:eid>", methods=["DELETE"])
-@login_required
 def del_entry(eid):
-    data = load()
-    data["entries"] = [e for e in data["entries"] if e["id"] != eid]
-    save(data)
-    return jsonify({"success": True})
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); ud["entries"]=[e for e in ud["entries"] if e["id"]!=eid]
+    save_udata(session["username"],ud); return jsonify({"success":True})
 
 @app.route("/api/goals", methods=["POST"])
-@login_required
 def add_goal():
-    data = load()
-    if "goals" not in data:
-        data["goals"] = []
-    goal = request.json
-    goal["id"]            = int(datetime.now().timestamp() * 1000)
-    goal["targetAmount"]  = float(goal["targetAmount"])
-    goal["savedAmount"]   = float(goal.get("savedAmount", 0))
-    goal["monthlyTarget"] = float(goal.get("monthlyTarget", 0))
-    data["goals"].append(goal)
-    save(data)
-    return jsonify({"success": True, "goal": goal})
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); ud.setdefault("goals",[])
+    g = request.json; g["id"]=int(datetime.now().timestamp()*1000)
+    g["targetAmount"]=float(g["targetAmount"]); g["savedAmount"]=float(g.get("savedAmount",0))
+    g["monthlyTarget"]=float(g.get("monthlyTarget",0))
+    ud["goals"].append(g); save_udata(session["username"],ud); return jsonify({"success":True,"goal":g})
 
 @app.route("/api/goals/<int:gid>", methods=["DELETE"])
-@login_required
 def del_goal(gid):
-    data = load()
-    data["goals"] = [g for g in data.get("goals", []) if g["id"] != gid]
-    save(data)
-    return jsonify({"success": True})
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); ud["goals"]=[g for g in ud.get("goals",[]) if g["id"]!=gid]
+    save_udata(session["username"],ud); return jsonify({"success":True})
 
 @app.route("/api/goals/<int:gid>/deposit", methods=["POST"])
-@login_required
 def deposit_goal(gid):
-    data   = load()
-    amount = float(request.json.get("amount", 0))
-    for g in data.get("goals", []):
-        if g["id"] == gid:
-            g["savedAmount"] = min(g["savedAmount"] + amount, g["targetAmount"])
-            break
-    save(data)
-    return jsonify({"success": True})
-
-@app.route("/api/recommendations")
-@login_required
-def get_recommendations():
-    data = load()
-    income  = data.get("income", 0)
-    entries = data.get("entries", [])
-
-    emi_total = sum(e["amount"] for e in entries if e["type"] == "EMI")
-    sip_total = sum(e["amount"] for e in entries if e["type"] == "SIP")
-    exp_total = sum(e["amount"] for e in entries if e["type"] == "Expense")
-    total_out = emi_total + sip_total + exp_total
-    free_cash = income - total_out
-
-    warnings    = []
-    suggestions = []
-    score       = 100
-
-    # EMI check
-    if income > 0:
-        emi_ratio = (emi_total / income) * 100
-        if emi_ratio > 50:
-            warnings.append("Your EMI is more than 50% of income. This is dangerous.")
-            score -= 30
-        elif emi_ratio > 40:
-            warnings.append("Your EMI is more than 40% of income. Try to reduce debt.")
-            score -= 15
-
-    # Savings check
-    if sip_total == 0:
-        warnings.append("You have no SIP or investments. Start saving now.")
-        score -= 20
-        if free_cash > 2000:
-            suggestions.append("Start a SIP of Rs. " + str(int(free_cash * 0.2)) + "/month.")
-
-    # Free cash check
-    if free_cash < 0:
-        warnings.append("You are spending more than you earn. Immediate action needed.")
-        score -= 30
-    elif free_cash < income * 0.1:
-        warnings.append("Very little free cash left. Try cutting expenses.")
-        score -= 10
-    else:
-        suggestions.append("You have Rs. " + str(int(free_cash)) + " free. Consider investing 20% of it.")
-
-    # SIP suggestion
-    if free_cash > 5000 and sip_total < income * 0.1:
-        suggestions.append("Increase your SIP. Aim for 10% of income = Rs. " + str(int(income * 0.1)) + "/month.")
-
-    # Score floor
-    score = max(0, score)
-
-    # Grade
-    if score >= 80:
-        grade = "Excellent"
-    elif score >= 60:
-        grade = "Good"
-    elif score >= 40:
-        grade = "Average"
-    else:
-        grade = "Poor"
-
-    return jsonify({
-        "score":       score,
-        "grade":       grade,
-        "warnings":    warnings,
-        "suggestions": suggestions,
-        "free_cash":   free_cash,
-        "emi_total":   emi_total,
-        "sip_total":   sip_total,
-        "exp_total":   exp_total
-    })
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    ud = get_udata(session["username"]); amt=float(request.json.get("amount",0))
+    for g in ud.get("goals",[]):
+        if g["id"]==gid: g["savedAmount"]=min(g["savedAmount"]+amt,g["targetAmount"]); break
+    save_udata(session["username"],ud); return jsonify({"success":True})
 
 if __name__ == "__main__":
     app.run(debug=True)
