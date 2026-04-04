@@ -1,6 +1,7 @@
 let appData = { income: 0, entries: [], goals: [] };
 let currentFilter = "All";
 let pieInst = null, barInst = null, expInst = null, sipInst = null;
+let emiBreakInst = null, cashflowInst = null, expPieInst = null, sipProjInst = null;
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 // ── INIT ──
@@ -194,6 +195,10 @@ function renderReports() {
   drawBar(emi, sip, exp);
   drawExpenseChart();
   drawSIPChart();
+  drawEMIBreakdown();
+  drawCashFlow(income, out, free);
+  drawExpensePie();
+  drawSIPProjection();
   renderEMIReport();
   renderSIPReport();
 }
@@ -492,6 +497,196 @@ async function saveIncome() {
   await fetch("/api/income", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({income}) });
   closeModal("incomeModal");
   await fetchData();
+}
+
+// EMI BREAKDOWN BAR CHART
+function drawEMIBreakdown() {
+  if (emiBreakInst) { emiBreakInst.destroy(); emiBreakInst = null; }
+  const wrap = document.getElementById("emi-breakdown-wrap");
+  const emis = appData.entries.filter(e => e.type === "EMI");
+  if (!emis.length) {
+    if (wrap) wrap.innerHTML = '<div class="no-data">No EMIs added.<br><b>Add EMI entries</b> to see chart.</div>';
+    return;
+  }
+  if (wrap && !wrap.querySelector("canvas")) wrap.innerHTML = '<canvas id="emi-breakdown-chart"></canvas>';
+  const ctx = document.getElementById("emi-breakdown-chart").getContext("2d");
+  const palette = ["#ef4444","#f59e0b","#8b5cf6","#ec4899","#06b6d4","#3b82f6","#10b981"];
+  emiBreakInst = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: emis.map(e => e.name),
+      datasets: [{
+        label: "Monthly EMI (Rs.)",
+        data: emis.map(e => e.amount),
+        backgroundColor: emis.map((_, i) => palette[i % palette.length] + "cc"),
+        borderColor:     emis.map((_, i) => palette[i % palette.length]),
+        borderWidth: 1, borderRadius: 6, borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#111827", borderColor: "#1f2d45", borderWidth: 1,
+          titleColor: "#e2e8f0", bodyColor: "#f59e0b",
+          callbacks: {
+            label: c => "  " + fmt(c.parsed.y) + "/mo",
+            afterLabel: c => {
+              const e = emis[c.dataIndex];
+              return (e.bank ? "  " + e.bank + " · " : "  ") + (e.remaining||0) + " months left";
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#94a3b8", maxRotation: 30 }, grid: { display: false }, border: { display: false } },
+        y: { ticks: { color: "#64748b", callback: v => "Rs." + (v >= 1000 ? (v/1000).toFixed(0)+"k" : v) }, grid: { color: "rgba(31,45,69,0.6)" }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// MONTHLY CASH FLOW BAR CHART
+function drawCashFlow(income, outflow, free) {
+  if (cashflowInst) { cashflowInst.destroy(); cashflowInst = null; }
+  const ctx = document.getElementById("cashflow-chart").getContext("2d");
+  const freeColor = free >= 0 ? "rgba(16,185,129,0.8)" : "rgba(239,68,68,0.8)";
+  cashflowInst = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["This Month"],
+      datasets: [
+        { label: "Income",    data: [income],         backgroundColor: "rgba(16,185,129,0.8)", borderRadius: 6, borderSkipped: false },
+        { label: "Outflow",   data: [outflow],        backgroundColor: "rgba(239,68,68,0.8)",  borderRadius: 6, borderSkipped: false },
+        { label: "Free Cash", data: [Math.abs(free)], backgroundColor: freeColor,              borderRadius: 6, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#94a3b8", padding: 14, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: "#111827", borderColor: "#1f2d45", borderWidth: 1,
+          titleColor: "#e2e8f0", bodyColor: "#f59e0b",
+          callbacks: {
+            label: c => {
+              const suffix = c.dataset.label === "Free Cash" && free < 0 ? " (Deficit)" : "";
+              return "  " + fmt(c.parsed.y) + suffix;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#64748b" }, grid: { display: false }, border: { display: false } },
+        y: { ticks: { color: "#64748b", callback: v => "Rs." + (v >= 1000 ? (v/1000).toFixed(0)+"k" : v) }, grid: { color: "rgba(31,45,69,0.6)" }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// EXPENSE CATEGORY PIE CHART
+function drawExpensePie() {
+  if (expPieInst) { expPieInst.destroy(); expPieInst = null; }
+  const wrap = document.getElementById("exp-pie-wrap");
+  const expenses = appData.entries.filter(e => e.type === "Expense");
+  if (!expenses.length) {
+    if (wrap) wrap.innerHTML = '<div class="no-data">No expenses added.<br><b>Add expense entries</b> to see chart.</div>';
+    return;
+  }
+  const cats = {};
+  expenses.forEach(e => { const k = e.category || "Other"; cats[k] = (cats[k] || 0) + e.amount; });
+  const labels = Object.keys(cats);
+  const values = Object.values(cats);
+  const total  = values.reduce((a, b) => a + b, 0);
+  if (wrap && !wrap.querySelector("canvas")) wrap.innerHTML = '<canvas id="exp-pie-canvas"></canvas>';
+  const palette = ["#3b82f6","#8b5cf6","#f59e0b","#10b981","#ef4444","#06b6d4","#ec4899","#a3e635"];
+  expPieInst = new Chart(document.getElementById("exp-pie-canvas").getContext("2d"), {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: labels.map((_, i) => palette[i % palette.length]),
+        borderColor: "#151e2e", borderWidth: 3, hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { color: "#94a3b8", padding: 14, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: "#111827", borderColor: "#1f2d45", borderWidth: 1,
+          titleColor: "#e2e8f0", bodyColor: "#f59e0b",
+          callbacks: { label: c => "  " + fmt(c.parsed) + "  (" + Math.round(c.parsed / total * 100) + "%)" }
+        }
+      },
+      cutout: "60%"
+    }
+  });
+}
+
+// SIP GROWTH PROJECTION LINE CHART  M = P × ((1+r)^n − 1) / r × (1+r), r = 12%/12
+function drawSIPProjection() {
+  if (sipProjInst) { sipProjInst.destroy(); sipProjInst = null; }
+  const input = document.getElementById("sip-proj-amount");
+  let P = parseFloat(input ? input.value : 0);
+  if (!P || P <= 0) P = 5000;
+  const r = 0.12 / 12;
+  const years = [5, 10, 15, 20];
+  const corpus   = years.map(y => { const n = y * 12; return Math.round(P * (Math.pow(1+r, n) - 1) / r * (1 + r)); });
+  const invested = years.map(y => P * y * 12);
+  const ctx = document.getElementById("sip-projection-chart").getContext("2d");
+  sipProjInst = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: years.map(y => y + "Y"),
+      datasets: [
+        {
+          label: "Projected Corpus",
+          data: corpus,
+          borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,0.08)",
+          borderWidth: 2.5, pointBackgroundColor: "#f59e0b",
+          pointRadius: 5, pointHoverRadius: 7,
+          fill: true, tension: 0.35
+        },
+        {
+          label: "Amount Invested",
+          data: invested,
+          borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.06)",
+          borderWidth: 2, borderDash: [5, 4], pointBackgroundColor: "#3b82f6",
+          pointRadius: 4, pointHoverRadius: 6,
+          fill: true, tension: 0.35
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { labels: { color: "#94a3b8", padding: 14, font: { size: 11 } } },
+        tooltip: {
+          backgroundColor: "#111827", borderColor: "#1f2d45", borderWidth: 1,
+          titleColor: "#e2e8f0", bodyColor: "#f59e0b",
+          callbacks: {
+            label: c => "  " + c.dataset.label + ": " + fmt(c.parsed.y),
+            afterBody: items => {
+              const i = items[0].dataIndex;
+              const gain = corpus[i] - invested[i];
+              return ["  Gain: " + fmt(gain) + "  (" + Math.round(gain / invested[i] * 100) + "% return)"];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#64748b" }, grid: { color: "rgba(31,45,69,0.6)" }, border: { display: false } },
+        y: {
+          ticks: { color: "#64748b", callback: v => v >= 100000 ? "Rs." + (v/100000).toFixed(1) + "L" : v >= 1000 ? "Rs." + (v/1000).toFixed(0) + "k" : "Rs." + v },
+          grid: { color: "rgba(31,45,69,0.6)" }, border: { display: false }
+        }
+      }
+    }
+  });
 }
 
 fetchData();

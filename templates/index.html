@@ -181,6 +181,25 @@
     .emoji-opt{width:38px;height:38px;border-radius:8px;font-size:20px;background:#0a0e1a;border:1px solid #1f2d45;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s}
     .emoji-opt.selected{border-color:#f59e0b;background:rgba(245,158,11,0.15)}
 
+    /* PAYMENT LOG */
+    .pay-section{margin-top:24px}
+    .pay-section-title{font-weight:700;font-size:16px;margin-bottom:16px}
+    .pay-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 2fr auto;gap:12px;align-items:end;margin-bottom:8px}
+    .pay-fg{display:flex;flex-direction:column;gap:5px}
+    .pay-fg label{color:#64748b;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+    .pay-fg input,.pay-fg select{background:#0a0e1a;border:1px solid #1f2d45;border-radius:10px;padding:9px 12px;color:#e2e8f0;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s}
+    .pay-fg input:focus,.pay-fg select:focus{border-color:#f59e0b}
+    .pay-fg select option{background:#111827;color:#e2e8f0}
+    .btn-log{background:#f59e0b;color:#000;border:none;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .btn-log:hover{background:#d97706}
+    .pay-msg{font-size:12px;margin-bottom:12px;min-height:18px}
+    .pay-msg.ok{color:#10b981}.pay-msg.err{color:#ef4444}
+    .pay-empty{text-align:center;color:#64748b;font-size:14px;padding:28px 0}
+    .badge-Rent{background:rgba(139,92,246,0.15);color:#8b5cf6;border:1px solid rgba(139,92,246,0.3)}
+    .badge-Variable{background:rgba(59,130,246,0.15);color:#3b82f6;border:1px solid rgba(59,130,246,0.3)}
+    .badge-Other{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)}
+    @media(max-width:768px){.pay-form-grid{grid-template-columns:1fr 1fr}}
+
     @media(max-width:768px){
       .two-col,.charts-grid,.three-col{grid-template-columns:1fr}
       .stat-row,.report-stat-row{flex-direction:column}
@@ -244,8 +263,48 @@
       </div>
     </div>
     <div class="two-col">
-      <div class="card"><div class="section-title mb-16">EMI Summary</div><div id="dash-emi"><p class="c-muted">No EMIs added.</p></div></div>
+      <div class="card mb-20">
+        <div class="section-title mb-16">EMI Summary</div><div id="dash-emi"><p class="c-muted">No EMIs added.</p></div></div>
       <div class="card"><div class="section-title mb-16">Upcoming Due Dates</div><div id="upcoming-list"><p class="c-muted">No upcoming dues this month.</p></div></div>
+    </div>
+
+    <!-- LOG PAYMENT -->
+    <div class="card pay-section">
+      <div class="pay-section-title">Log Payment</div>
+      <div class="pay-form-grid">
+        <div class="pay-fg">
+          <label>Category</label>
+          <select id="pay-category">
+            <option value="">Select</option>
+            <option>EMI</option>
+            <option>SIP</option>
+            <option>Rent</option>
+            <option>Variable Expense</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="pay-fg">
+          <label>Amount (Rs.)</label>
+          <input type="number" id="pay-amount" placeholder="0" min="1">
+        </div>
+        <div class="pay-fg">
+          <label>Date</label>
+          <input type="date" id="pay-date">
+        </div>
+        <div class="pay-fg">
+          <label>Note</label>
+          <input type="text" id="pay-note" placeholder="Optional note">
+        </div>
+        <button class="btn-log" onclick="logPayment()">Log</button>
+      </div>
+      <div class="pay-msg" id="pay-msg"></div>
+      <div class="card-p0">
+        <table id="pay-table">
+          <thead><tr><th>Date</th><th>Category</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+          <tbody id="pay-tbody"></tbody>
+        </table>
+        <div class="pay-empty" id="pay-empty">No payments logged yet.</div>
+      </div>
     </div>
   </div>
 
@@ -329,7 +388,7 @@
     </div>
 
     <!-- EMI + SIP text progress -->
-    <div class="two-col">
+    <div class="two-col mb-20">
       <div class="card">
         <div class="section-title">EMI Repayment Progress</div>
         <div class="section-sub">Loan payoff tracking</div>
@@ -339,6 +398,43 @@
         <div class="section-title">SIP Investment Progress</div>
         <div class="section-sub">Duration & corpus</div>
         <div id="sip-report"><p class="c-muted">No SIPs added.</p></div>
+      </div>
+    </div>
+
+    <!-- NEW CHARTS ROW 1: EMI Breakdown + Monthly Cash Flow -->
+    <div class="charts-grid mb-20">
+      <div class="chart-box">
+        <div class="chart-title">EMI Breakdown</div>
+        <div class="chart-sub">Monthly amount per loan</div>
+        <div class="chart-area" id="emi-breakdown-wrap">
+          <div class="no-data">No EMIs added.<br><b>Add EMI entries</b> to see chart.</div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">Monthly Cash Flow</div>
+        <div class="chart-sub">Income vs Total Expenses vs Free Cash</div>
+        <div class="chart-area"><canvas id="cashflow-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- NEW CHARTS ROW 2: Expense Category Pie + SIP Growth Projection -->
+    <div class="charts-grid">
+      <div class="chart-box">
+        <div class="chart-title">Expense Category Breakdown</div>
+        <div class="chart-sub">Variable expenses by category (pie)</div>
+        <div class="chart-area" id="exp-pie-wrap">
+          <div class="no-data">No expenses added.<br><b>Add expense entries</b> to see chart.</div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">SIP Growth Projection</div>
+        <div class="chart-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+          <span>12% p.a. &nbsp;·&nbsp; Monthly SIP (Rs.):</span>
+          <input type="number" id="sip-proj-amount" placeholder="5000" min="100"
+            style="background:#0a0e1a;border:1px solid #1f2d45;border-radius:6px;padding:3px 8px;color:#f59e0b;font-size:12px;width:90px;outline:none;font-family:inherit"
+            oninput="drawSIPProjection()">
+        </div>
+        <div class="chart-area"><canvas id="sip-projection-chart"></canvas></div>
       </div>
     </div>
   </div>
@@ -444,6 +540,152 @@
   </div>
 </div>
 
+<!-- EDIT PAYMENT MODAL -->
+<div class="modal-overlay" id="editPayModal" onclick="closeModal('editPayModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Edit Payment</h3>
+    <input type="hidden" id="ep-id">
+    <div class="form-grid">
+      <div class="fg full">
+        <label>Category</label>
+        <select id="ep-category">
+          <option value="">Select</option>
+          <option>EMI</option>
+          <option>SIP</option>
+          <option>Rent</option>
+          <option>Variable Expense</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (Rs.)</label><input type="number" id="ep-amount" placeholder="0" min="1"></div>
+      <div class="fg"><label>Date</label><input type="date" id="ep-date"></div>
+      <div class="fg full"><label>Note</label><input type="text" id="ep-note" placeholder="Optional note"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('editPayModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitEditPayment()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <script src="/static/js/app.js"></script>
+<script>
+  // Payment feature
+  const PAY_CATEGORIES = {
+    'EMI': 'badge badge-EMI',
+    'SIP': 'badge badge-SIP',
+    'Rent': 'badge badge-Rent',
+    'Variable Expense': 'badge badge-Variable',
+    'Other': 'badge badge-Other'
+  };
+
+  function renderPayments(payments) {
+    const tbody = document.getElementById('pay-tbody');
+    const empty = document.getElementById('pay-empty');
+    tbody.innerHTML = '';
+    if (!payments.length) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    payments.slice().reverse().forEach(p => {
+      const cls = PAY_CATEGORIES[p.category] || 'badge badge-Other';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="td-meta">${p.date}</td>
+        <td><span class="${cls}">${p.category}</span></td>
+        <td class="td-amount">Rs. ${Number(p.amount).toLocaleString('en-IN')}</td>
+        <td class="td-meta">${p.note || '—'}</td>
+        <td style="white-space:nowrap">
+          <button class="btn-remove" style="margin-right:6px" onclick="openEditPayModal(${p.id},'${p.category}',${p.amount},'${p.date}','${(p.note||'').replace(/'/g,"\\'")}')">Edit</button>
+          <button class="btn-remove" onclick="deletePayment(${p.id})">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function loadPayments() {
+    try {
+      const res = await fetch('/get_payments');
+      if (!res.ok) return;
+      renderPayments(await res.json());
+    } catch(e) {}
+  }
+
+  async function logPayment() {
+    const category = document.getElementById('pay-category').value;
+    const amount   = document.getElementById('pay-amount').value;
+    const date     = document.getElementById('pay-date').value;
+    const note     = document.getElementById('pay-note').value;
+    const msg      = document.getElementById('pay-msg');
+    msg.className = 'pay-msg'; msg.textContent = '';
+    if (!category || !amount || !date) {
+      msg.className = 'pay-msg err'; msg.textContent = 'Category, amount and date are required.'; return;
+    }
+    try {
+      const res = await fetch('/log_payment', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({category, amount: parseFloat(amount), date, note})
+      });
+      const data = await res.json();
+      if (data.success) {
+        msg.className = 'pay-msg ok'; msg.textContent = 'Payment logged!';
+        document.getElementById('pay-category').value = '';
+        document.getElementById('pay-amount').value   = '';
+        document.getElementById('pay-date').value     = '';
+        document.getElementById('pay-note').value     = '';
+        loadPayments();
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+      } else {
+        msg.className = 'pay-msg err'; msg.textContent = data.error || 'Failed to log payment.';
+      }
+    } catch(e) {
+      msg.className = 'pay-msg err'; msg.textContent = 'Network error.';
+    }
+  }
+
+  function openEditPayModal(id, category, amount, date, note) {
+    document.getElementById('ep-id').value       = id;
+    document.getElementById('ep-category').value = category;
+    document.getElementById('ep-amount').value   = amount;
+    document.getElementById('ep-date').value     = date;
+    document.getElementById('ep-note').value     = note;
+    document.getElementById('editPayModal').classList.add('open');
+  }
+
+  async function submitEditPayment() {
+    const id       = document.getElementById('ep-id').value;
+    const category = document.getElementById('ep-category').value;
+    const amount   = document.getElementById('ep-amount').value;
+    const date     = document.getElementById('ep-date').value;
+    const note     = document.getElementById('ep-note').value;
+    if (!category || !amount || !date) return;
+    try {
+      const res = await fetch(`/edit_payment/${id}`, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({category, amount: parseFloat(amount), date, note})
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeModal('editPayModal');
+        loadPayments();
+      }
+    } catch(e) {}
+  }
+
+  async function deletePayment(id) {
+    if (!confirm('Delete this payment?')) return;
+    try {
+      const res = await fetch(`/delete_payment/${id}`, {method:'DELETE'});
+      const data = await res.json();
+      if (data.success) loadPayments();
+    } catch(e) {}
+  }
+
+  // Set today's date as default
+  document.addEventListener('DOMContentLoaded', () => {
+    const d = document.getElementById('pay-date');
+    if (d) d.valueAsDate = new Date();
+    loadPayments();
+  });
+</script>
 </body>
 </html>

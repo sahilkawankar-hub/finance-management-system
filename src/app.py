@@ -5,6 +5,15 @@ from datetime import datetime
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 app.secret_key = secrets.token_hex(32)
 DATA_FILE = "data.json"
+PAYMENTS_FILE = "payments.json"
+
+def load_payments():
+    if os.path.exists(PAYMENTS_FILE):
+        with open(PAYMENTS_FILE) as f: return json.load(f)
+    return []
+
+def save_payments(payments):
+    with open(PAYMENTS_FILE, "w") as f: json.dump(payments, f, indent=2)
 
 def load():
     if os.path.exists(DATA_FILE):
@@ -115,13 +124,69 @@ def del_goal(gid):
     ud = get_udata(session["username"]); ud["goals"]=[g for g in ud.get("goals",[]) if g["id"]!=gid]
     save_udata(session["username"],ud); return jsonify({"success":True})
 
-@app.route("/api/goals/<int:gid>/deposit", methods=["POST"])
-def deposit_goal(gid):
+@app.route("/log_payment", methods=["POST"])
+def log_payment():
     if not ok(): return jsonify({"error":"Unauthorized"}),401
-    ud = get_udata(session["username"]); amt=float(request.json.get("amount",0))
-    for g in ud.get("goals",[]):
-        if g["id"]==gid: g["savedAmount"]=min(g["savedAmount"]+amt,g["targetAmount"]); break
-    save_udata(session["username"],ud); return jsonify({"success":True})
+    b = request.json
+    category = b.get("category","").strip()
+    note = b.get("note","").strip()
+    try:
+        amount = float(b.get("amount",0))
+        date = b.get("date","").strip()
+    except (ValueError, TypeError):
+        return jsonify({"success":False,"error":"Invalid amount or date."}),400
+    if not category or not date or amount <= 0:
+        return jsonify({"success":False,"error":"category, amount, and date are required."}),400
+    payment = {
+        "id": int(datetime.now().timestamp()*1000),
+        "user": session["username"],
+        "category": category,
+        "amount": amount,
+        "date": date,
+        "note": note
+    }
+    payments = load_payments()
+    payments.append(payment)
+    save_payments(payments)
+    return jsonify({"success":True,"payment":payment})
+
+@app.route("/get_payments")
+def get_payments():
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    payments = load_payments()
+    user_payments = [p for p in payments if p.get("user")==session["username"]]
+    return jsonify(user_payments)
+
+@app.route("/edit_payment/<int:pid>", methods=["PUT"])
+def edit_payment(pid):
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    b = request.json
+    category = b.get("category","").strip()
+    note = b.get("note","").strip()
+    try:
+        amount = float(b.get("amount",0))
+        date = b.get("date","").strip()
+    except (ValueError, TypeError):
+        return jsonify({"success":False,"error":"Invalid amount or date."}),400
+    if not category or not date or amount <= 0:
+        return jsonify({"success":False,"error":"category, amount, and date are required."}),400
+    payments = load_payments()
+    for p in payments:
+        if p.get("id")==pid and p.get("user")==session["username"]:
+            p["category"]=category; p["amount"]=amount; p["date"]=date; p["note"]=note
+            save_payments(payments)
+            return jsonify({"success":True,"payment":p})
+    return jsonify({"success":False,"error":"Payment not found."}),404
+
+@app.route("/delete_payment/<int:pid>", methods=["DELETE"])
+def delete_payment(pid):
+    if not ok(): return jsonify({"error":"Unauthorized"}),401
+    payments = load_payments()
+    new_payments = [p for p in payments if not (p.get("id")==pid and p.get("user")==session["username"])]
+    if len(new_payments)==len(payments):
+        return jsonify({"success":False,"error":"Payment not found."}),404
+    save_payments(new_payments)
+    return jsonify({"success":True})
 
 if __name__ == "__main__":
     app.run(debug=True)
