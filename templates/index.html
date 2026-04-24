@@ -3,9 +3,30 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FinTrack</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>FinTrack — Personal Finance Manager</title>
+  <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
   <style>
+    :root {
+  --bg:      #0a0e1a;
+  --surface: #111827;
+  --card:    #151e2e;
+  --border:  #1f2d45;
+  --text:    #e2e8f0;
+  --muted:   #64748b;
+  --amber:   #f59e0b;
+  --green:   #10b981;
+  --red:     #ef4444;
+  --blue:    #3b82f6;
+}
+
+body.light {
+  --bg:      #f1f5f9;
+  --surface: #ffffff;
+  --card:    #ffffff;
+  --border:  #e2e8f0;
+  --text:    #1e293b;
+  --muted:   #64748b;
+}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#0a0e1a;color:#e2e8f0;min-height:100vh}
 
@@ -15,8 +36,8 @@
     .logo{display:flex;align-items:center;gap:10px}
     .logo-icon{width:42px;height:42px;background:#f59e0b;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#000;letter-spacing:-1px;box-shadow:0 2px 10px rgba(245,158,11,0.4)}
     .logo-text{font-size:18px;font-weight:700;color:#e2e8f0}
-    nav{display:flex;gap:4px}
-    .nav-btn{background:transparent;color:#64748b;border:1px solid transparent;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+    nav{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;}
+    .nav-btn{background:transparent;color:#64748b;border:1px solid transparent;border-radius:10px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;flex-shrink:0;white-space:nowrap}
     .nav-btn:hover{color:#e2e8f0}
     .nav-btn.active{background:rgba(245,158,11,0.12);color:#f59e0b;border-color:rgba(245,158,11,0.35)}
     .header-right{display:flex;align-items:center;gap:10px}
@@ -100,6 +121,8 @@
     .td-name{font-weight:600}.td-amount{font-family:'Courier New',monospace;color:#f59e0b;font-weight:600}.td-meta{color:#64748b;font-size:13px}
     .btn-remove{background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
     .btn-remove:hover{background:rgba(239,68,68,0.25)}
+    .btn-paid{background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.25);border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-right:6px}
+    .btn-paid:hover{background:rgba(16,185,129,0.25)}
     .empty-state{padding:40px;text-align:center;color:#64748b;font-size:14px;display:none}
 
     /* GOALS */
@@ -208,6 +231,128 @@
       nav{gap:2px}
       .nav-btn{padding:6px 10px;font-size:12px}
     }
+
+    /* EMI progress bar inside dashboard/entries (rendered by JS) */
+    .emi-prog-track{background:#1f2d45;border-radius:99px;height:6px;margin-bottom:4px}
+    .emi-prog-sub{color:#64748b;font-size:11px}
+
+    /* ── Theme toggle button ── */
+    .theme-toggle{background:none;border:1.5px solid var(--border,rgba(255,255,255,0.15));border-radius:50%;width:36px;height:36px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.2s;flex-shrink:0}
+    .theme-toggle:hover{background:rgba(255,255,255,0.1);transform:rotate(20deg)}
+
+    /* ── Light theme overrides ── */
+    body.light{background:#f1f5f9;color:#1e293b}
+
+    /* Header & Nav */
+    body.light header{background:#ffffff;border-bottom:1px solid #e2e8f0;box-shadow:0 1px 8px rgba(0,0,0,0.06)}
+    body.light .logo-text{color:#1e293b}
+    body.light .nav-btn{color:#64748b}
+    body.light .nav-btn:hover{color:#1e293b}
+    body.light .nav-btn.active{background:rgba(245,158,11,0.12);color:#d97706;border-color:rgba(245,158,11,0.4)}
+    body.light .btn-outline{color:#475569;border-color:#cbd5e1}
+    body.light .btn-outline:hover{color:#1e293b;border-color:#94a3b8}
+
+    /* User chip & dropdown */
+    body.light .user-chip{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3);color:#92400e}
+    body.light .user-dropdown{background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+    body.light .dd-header{border-bottom-color:#e2e8f0}
+    body.light .dd-header small{color:#94a3b8}
+    body.light .dd-header strong{color:#1e293b}
+    body.light .dd-item{color:#475569}
+    body.light .dd-item:hover{background:#f1f5f9;color:#1e293b}
+    body.light .theme-toggle{border-color:#cbd5e1;color:#475569}
+    body.light .theme-toggle:hover{background:#f1f5f9}
+
+    /* Cards */
+    body.light .card{background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+    body.light .card-p0{background:#ffffff;border:1px solid #e2e8f0}
+    body.light .stat-card{background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+    body.light .goal-card{background:#ffffff;border:1px solid #e2e8f0}
+    body.light .add-goal-card{background:#ffffff;border-color:#cbd5e1;color:#94a3b8}
+    body.light .summary-box{background:linear-gradient(135deg,rgba(245,158,11,0.05),rgba(59,130,246,0.05));border-color:#e2e8f0}
+
+    /* Text */
+    body.light .stat-label{color:#94a3b8}
+    body.light .stat-sub{color:#94a3b8}
+    body.light .stat-value{color:#1e293b}
+    body.light .section-title{color:#1e293b}
+    body.light .commit-title{color:#1e293b}
+    body.light .bd-label{color:#94a3b8}
+    body.light .bd-val{color:#1e293b}
+    body.light .c-muted{color:#94a3b8}
+    body.light .due-name{color:#1e293b}
+    body.light .due-meta{color:#94a3b8}
+    body.light .goal-name{color:#1e293b}
+    body.light .goal-deadline{color:#94a3b8}
+    body.light .goal-target{color:#94a3b8}
+    body.light .goal-months{color:#94a3b8}
+    body.light .goals-topbar h2{color:#1e293b}
+    body.light .goals-topbar p{color:#94a3b8}
+    body.light .summary-key{color:#64748b}
+    body.light .summary-val{color:#1e293b}
+    body.light .summary-row{border-bottom-color:rgba(203,213,225,0.6)}
+
+    /* Progress bars background */
+    body.light .progress-track{background:#e2e8f0}
+    body.light .goal-prog-track{background:#e2e8f0}
+    body.light .emi-prog-track{background:#e2e8f0}
+    body.light .emi-prog-sub{color:#94a3b8}
+    body.light .due-item{border-bottom-color:#f1f5f9}
+
+    /* Tables */
+    body.light thead tr{background:#f8fafc;border-bottom-color:#e2e8f0}
+    body.light th{color:#94a3b8}
+    body.light tbody tr{border-bottom-color:#f1f5f9}
+    body.light tbody tr:hover{background:#f8fafc}
+    body.light tbody tr.alt-row{background:rgba(241,245,249,0.6)}
+    body.light td{color:#1e293b}
+    body.light .td-meta{color:#94a3b8}
+
+    /* Filter buttons */
+    body.light .filter-btn{color:#64748b;border-color:#e2e8f0}
+
+    /* Inputs & Modals */
+    body.light input,body.light select,body.light textarea{background:#f8fafc;border-color:#cbd5e1;color:#1e293b}
+    body.light input::placeholder,body.light textarea::placeholder{color:#94a3b8}
+    body.light .modal{background:#ffffff;color:#1e293b;border-color:#e2e8f0}
+    body.light .modal-overlay{background:rgba(15,23,42,0.5)}
+    body.light .modal h2,body.light .modal h3{color:#1e293b}
+    body.light label,body.light .fg label,body.light .pay-fg label{color:#64748b}
+    body.light .form-note{color:#94a3b8}
+    body.light .type-btn{background:#f8fafc;color:#64748b;border-color:#cbd5e1}
+    body.light .fg input,body.light .fg select{background:#f8fafc;border-color:#cbd5e1;color:#1e293b}
+    body.light .fg select option,body.light .pay-fg select option{background:#ffffff;color:#1e293b}
+    body.light .emoji-opt{background:#f8fafc;border-color:#cbd5e1}
+    body.light .emoji-opt.selected{border-color:#f59e0b;background:rgba(245,158,11,0.08)}
+
+    /* Reports tab */
+    body.light .report-stat{background:#ffffff;border:1px solid #e2e8f0}
+    body.light .report-stat-val{color:#1e293b}
+    body.light .report-stat-lbl{color:#94a3b8}
+    body.light .chart-box{background:#ffffff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+    body.light .chart-title{color:#1e293b}
+    body.light .chart-sub{color:#94a3b8}
+    body.light .rp-name{color:#1e293b}
+    body.light .rp-val{color:#1e293b}
+    body.light .rp-track{background:#e2e8f0}
+    body.light .rp-sub{color:#94a3b8}
+    body.light .section-title{color:#1e293b}
+    body.light .section-sub{color:#94a3b8}
+    body.light .no-data{color:#94a3b8}
+
+    /* Payments tab */
+    body.light .pay-section-title{color:#1e293b}
+    body.light .pay-empty{color:#94a3b8}
+    body.light .pay-fg input,body.light .pay-fg select{background:#f8fafc;border-color:#cbd5e1;color:#1e293b}
+
+    /* Tips */
+   body.light .tip-card{background:#ffffff;border:1px solid #e2e8f0;color:#1e293b}
+   body.light .tip-line{color:#1e293b !important}
+   body.light .tip-action{color:#475569 !important}
+   body.light .tip-number{color:#94a3b8 !important}
+   body.light .tip-divider{background:#e2e8f0 !important}
+   body.light .ratio-title{color:#1e293b !important}
+   body.light .ratio-bar-wrap{background:#e2e8f0 !important}
   </style>
 </head>
 <body>
@@ -218,15 +363,20 @@
       <div class="logo-icon">FT</div>
       <span class="logo-text">FinTrack</span>
     </div>
-    <nav>
-      <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="nav-btn" data-tab="entries"          onclick="switchTab('entries')">Entries</button>
-      <button class="nav-btn" data-tab="goals"            onclick="switchTab('goals')">Goals</button>
-      <button class="nav-btn" data-tab="reports"          onclick="switchTab('reports')">Reports</button>
-    </nav>
+<nav>
+  <button class="nav-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+  <button class="nav-btn" data-tab="entries"          onclick="switchTab('entries')">Entries</button>
+  <button class="nav-btn" data-tab="goals"            onclick="switchTab('goals')">Goals</button>
+  <button class="nav-btn" data-tab="reports"          onclick="switchTab('reports')">Reports</button>
+  <button class="nav-btn" data-tab="payments"         onclick="switchTab('payments')">Payments</button>
+<button class="nav-btn" data-tab="recommendations"  onclick="switchTab('recommendations')">✨ AI Recs</button>
+<button class="nav-btn" data-tab="tips"             onclick="switchTab('tips')">Tips</button>
+
+</nav> 
     <div class="header-right">
       <button class="btn-outline" onclick="openIncomeModal()">Set Income</button>
       <button class="btn-primary"  onclick="openAddModal()">+ Add Entry</button>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
       <div class="user-chip" onclick="toggleDD(event)">
         <div class="user-avatar" id="userAvatar">?</div>
         <span id="userName">User</span>
@@ -247,19 +397,19 @@
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="tab active">
     <div class="stat-row">
-      <div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value c-green" id="s-income">Rs. 0</div><div class="stat-sub">Take-home salary</div></div>
-      <div class="stat-card"><div class="stat-label">Total Outflow</div><div class="stat-value c-red" id="s-outflow">Rs. 0</div><div class="stat-sub" id="s-ratio-sub">0% of income</div></div>
-      <div class="stat-card"><div class="stat-label">Free Cash</div><div class="stat-value c-green" id="s-free">Rs. 0</div><div class="stat-sub" id="s-free-sub">Available to save/spend</div></div>
-      <div class="stat-card"><div class="stat-label">SIP Investments</div><div class="stat-value c-blue" id="s-sip">Rs. 0</div><div class="stat-sub">Monthly savings</div></div>
-      <div class="stat-card"><div class="stat-label">Active Goals</div><div class="stat-value c-purple" id="s-goals">0</div><div class="stat-sub">Savings targets</div></div>
+      <div class="stat-card"><div class="stat-label">Monthly Income</div><div class="stat-value c-green" id="s-income">—</div><div class="stat-sub">Take-home salary</div></div>
+      <div class="stat-card"><div class="stat-label">Total Outflow</div><div class="stat-value c-red" id="s-outflow">—</div><div class="stat-sub" id="s-ratio-sub">0% of income</div></div>
+      <div class="stat-card"><div class="stat-label">Free Cash</div><div class="stat-value c-green" id="s-free">—</div><div class="stat-sub" id="s-free-sub">Available to save/spend</div></div>
+      <div class="stat-card"><div class="stat-label">SIP Investments</div><div class="stat-value c-blue" id="s-sip">—</div><div class="stat-sub">Monthly savings</div></div>
+      <div class="stat-card"><div class="stat-label">Active Goals</div><div class="stat-value c-purple" id="s-goals">—</div><div class="stat-sub">Savings targets</div></div>
     </div>
     <div class="card mb-20">
       <div class="commit-header"><span class="commit-title">Income Commitment Ratio</span><span class="commit-pct" id="commit-pct">0%</span></div>
       <div class="progress-track"><div class="progress-fill" id="commit-bar" style="width:0%;background:#10b981"></div></div>
       <div class="commit-breakdown">
-        <div><div class="bd-label">EMI</div><div class="bd-val c-red" id="bd-emi">Rs. 0</div></div>
-        <div><div class="bd-label">SIP</div><div class="bd-val c-green" id="bd-sip">Rs. 0</div></div>
-        <div><div class="bd-label">Expenses</div><div class="bd-val c-blue" id="bd-exp">Rs. 0</div></div>
+        <div><div class="bd-label">EMI</div><div class="bd-val c-red" id="bd-emi">—</div></div>
+        <div><div class="bd-label">SIP</div><div class="bd-val c-green" id="bd-sip">—</div></div>
+        <div><div class="bd-label">Expenses</div><div class="bd-val c-blue" id="bd-exp">—</div></div>
       </div>
     </div>
     <div class="two-col">
@@ -267,10 +417,177 @@
         <div class="section-title mb-16">EMI Summary</div><div id="dash-emi"><p class="c-muted">No EMIs added.</p></div></div>
       <div class="card"><div class="section-title mb-16">Upcoming Due Dates</div><div id="upcoming-list"><p class="c-muted">No upcoming dues this month.</p></div></div>
     </div>
+</div><!-- end tab-dashboard -->
+<!-- TIPS -->
+  <div id="tab-tips" class="tab">
+    <style>
+      .ratio-banner{border-radius:16px;padding:20px 24px;margin-bottom:28px;display:flex;align-items:center;gap:20px;border:1px solid;animation:fadeUp 0.5s ease both;position:relative;overflow:hidden}
+      .ratio-left{flex:1}
+      .ratio-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;border:1px solid}
+      .ratio-badge-dot{width:6px;height:6px;border-radius:50%;animation:pulse 1.5s infinite}
+      .ratio-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px}
+      .ratio-sub{font-size:12px;color:#64748b}
+      .ratio-right{text-align:right}
+      .ratio-pct{font-family:'Courier New',monospace;font-size:42px;font-weight:700;line-height:1;margin-bottom:4px}
+      .ratio-pct-label{font-size:11px;color:#64748b;letter-spacing:1px;text-transform:uppercase}
+      .ratio-bar-wrap{height:4px;background:var(--border);border-radius:99px;margin-top:14px;overflow:hidden}
+      .ratio-bar-fill{height:100%;border-radius:99px;transition:width 1s ease}
+      .tips-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+      .tip-card{background:#111827;border:1px solid #1f2d45;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateY(20px);animation:fadeUp 0.45s ease both;position:relative;overflow:hidden;cursor:default;transition:border-color 0.2s,transform 0.2s}
+      .tip-card:hover{transform:translateY(-3px)}
+      .tip-card-accent{position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+      .tip-number{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;opacity:0.5;color:#94a3b8;margin-bottom:2px}
+      .tip-icon-row{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+      .tip-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid}
+      .tip-tag{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid}
+      .tip-line{font-size:13px;font-weight:700;color:var(--text);line-height:1.5}
+      .tip-divider{height:1px;background:var(--border)}
+      .tip-action{font-size:12px;color:#94a3b8;line-height:1.6;display:flex;gap:8px;align-items:flex-start}
+      .tip-arrow{flex-shrink:0;font-size:12px;margin-top:1px;font-weight:700}
+      @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+      @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.7)}}
+      @media(max-width:768px){.tips-grid{grid-template-columns:1fr 1fr}}
+    </style>
+    <div style="margin-bottom:24px">
+      <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px">💡 Financial Health Tips</div>
+      <div style="color:#64748b;font-size:13px">Personalised tips based on your live income commitment ratio</div>
+    </div>
+    <div id="ratio-banner" class="ratio-banner"></div>
+    <div id="tips-grid" class="tips-grid"></div>
+  </div>
 
-    <!-- LOG PAYMENT -->
+  <!-- RECOMMENDATIONS -->
+  <div id="tab-recommendations" class="tab">
+    <style>
+      /* ── REC TAB STYLES ── */
+/* ── REC TAB STYLES ── */
+.rec-header-row{margin-bottom:24px}
+.rec-header-row h2{font-size:22px;font-weight:700;color:var(--text);margin-bottom:3px}
+.rec-header-row p{color:var(--muted);font-size:13px}
+
+.rec-meta-strip{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px}
+.rec-meta-card{flex:1;min-width:130px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.rec-meta-label{color:var(--muted);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.rec-meta-val{font-family:'Courier New',monospace;font-size:20px;font-weight:700;color:var(--text)}
+
+.rec-ratio-track{background:var(--border);border-radius:99px;height:4px;margin-top:8px;overflow:hidden}
+.rec-ratio-fill{height:100%;border-radius:99px;width:0%;transition:width 0.8s ease}
+
+.rec-refresh-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.rec-refresh-row span{color:var(--muted);font-size:13px}
+.btn-refresh{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.btn-refresh:hover{background:rgba(245,158,11,0.2)}
+.btn-refresh.spinning .refresh-icon{animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+      /* Skeleton loader */
+      .rec-skeleton{display:none;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:8px}
+      .skel-card{background:#151e2e;border:1px solid #1f2d45;border-radius:16px;padding:22px;height:200px;animation:shimmer 1.5s ease-in-out infinite alternate}
+      @keyframes shimmer{from{opacity:0.4}to{opacity:0.9}}
+
+      /* Cards grid */
+      #rec-cards-wrap{display:none;grid-template-columns:1fr 1fr 1fr;gap:14px}
+      .rec-card{border:1px solid;border-radius:16px;padding:20px;position:relative;overflow:hidden;cursor:default;transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;opacity:0;animation:recFadeUp 0.45s ease both}
+      .rec-card:hover{box-shadow:0 12px 40px rgba(0,0,0,0.35)}
+      @keyframes recFadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+
+      .rec-card-topbar{position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0}
+
+      .rec-card-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;margin-top:4px}
+      .rec-card-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;border:1px solid}
+      .rec-cat-row{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+      .rec-card-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.4}
+      .rec-tag{font-size:10px;font-weight:700;letter-spacing:0.5px;padding:3px 9px;border-radius:20px;border:1px solid;white-space:nowrap;align-self:flex-start;margin-top:2px}
+
+      .rec-summary{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+      .rec-divider{height:1px;background:var(--border);margin-bottom:12px}
+      .rec-action-text{font-size:12px;color:var(--muted);line-height:1.6}
+      .rec-arrow{font-size:14px;font-weight:700;flex-shrink:0;margin-top:1px}
+      .rec-action-text{font-size:12px;color:var(--muted);line-height:1.6}
+
+      .rec-impact{font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid;letter-spacing:0.3px}
+
+      .rec-error{display:none;color:#ef4444;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:16px 20px;font-size:13px;text-align:center;margin-bottom:16px}
+
+      .rec-ai-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-bottom:6px}
+      .rec-ai-dot{width:6px;height:6px;border-radius:50%;background:#a78bfa;animation:recPulse 1.5s infinite}
+      @keyframes recPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(0.6)}}
+
+      @media(max-width:900px){
+        #rec-cards-wrap{ grid-template-columns:1fr 1fr }
+        .rec-skeleton{ grid-template-columns:1fr 1fr }
+      }
+      @media(max-width:600px){
+        #rec-cards-wrap{ grid-template-columns:1fr }
+        .rec-skeleton{ grid-template-columns:1fr }
+        .rec-meta-strip{ flex-wrap:wrap }
+      }
+      /* TOAST NOTIFICATIONS */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;color:#fff;z-index:9999;animation:toastIn 0.3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.4);max-width:320px}
+.toast-success{background:#10b981}
+.toast-error{background:#ef4444}
+.toast-info{background:#3b82f6}
+.toast-warning{background:#f59e0b;color:#000}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    </style>
+
+    <div class="rec-header-row">
+      <div class="rec-ai-badge"><span class="rec-ai-dot"></span> Smart Analysis</div>
+      <h2>✨ Personalised Recommendations</h2>
+      <p>Rule-based advice calculated from your live data — spending cuts, investment moves, goal fixes & EMI strategy</p>
+    </div>
+
+    <!-- Meta strip -->
+    <div class="rec-meta-strip">
+      <div class="rec-meta-card">
+        <div class="rec-meta-label">Monthly Income</div>
+        <div class="rec-meta-val c-green" id="rec-income">—</div>
+      </div>
+      <div class="rec-meta-card">
+        <div class="rec-meta-label">Total Outflow</div>
+        <div class="rec-meta-val c-red" id="rec-outflow">—</div>
+      </div>
+      <div class="rec-meta-card">
+        <div class="rec-meta-label">Free Cash</div>
+        <div class="rec-meta-val c-green" id="rec-freecash">—</div>
+      </div>
+      <div class="rec-meta-card" style="flex:2;min-width:200px">
+        <div class="rec-meta-label">Commitment Ratio</div>
+        <div class="rec-meta-val" id="rec-ratio">—</div>
+        <div class="rec-ratio-track"><div class="rec-ratio-fill" id="rec-ratio-bar"></div></div>
+      </div>
+    </div>
+
+    <!-- Refresh row -->
+    <div class="rec-refresh-row">
+      <span>Analyses income, EMIs, SIPs, goals &amp; free cash using smart rules</span>
+      <button class="btn-refresh" onclick="reloadRecs(this)">
+        <span class="refresh-icon">↻</span> Refresh
+      </button>
+    </div>
+
+    <div class="rec-error" id="rec-error"></div>
+
+    <!-- Skeleton -->
+    <div class="rec-skeleton" id="rec-skeleton">
+      <div class="skel-card"></div>
+      <div class="skel-card" style="animation-delay:0.2s"></div>
+      <div class="skel-card" style="animation-delay:0.4s"></div>
+      <div class="skel-card" style="animation-delay:0.1s"></div>
+      <div class="skel-card" style="animation-delay:0.3s"></div>
+      <div class="skel-card" style="animation-delay:0.5s"></div>
+    </div>
+
+    <!-- Cards -->
+    <div id="rec-cards-wrap"></div>
+
+  </div>
+  <div id="tab-payments" class="tab">
     <div class="card pay-section">
-      <div class="pay-section-title">Log Payment</div>
+      <div class="pay-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+  Log Payment
+  <button class="btn-outline" onclick="exportCSV()" style="font-size:12px;padding:6px 14px;">⬇ Export CSV</button>
+</div>
       <div class="pay-form-grid">
         <div class="pay-fg">
           <label>Category</label>
@@ -284,7 +601,7 @@
           </select>
         </div>
         <div class="pay-fg">
-          <label>Amount (Rs.)</label>
+          <label>Amount (₹)</label>
           <input type="number" id="pay-amount" placeholder="0" min="1">
         </div>
         <div class="pay-fg">
@@ -306,6 +623,7 @@
         <div class="pay-empty" id="pay-empty">No payments logged yet.</div>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- ENTRIES -->
@@ -516,7 +834,7 @@
       <div class="fg"><label>Target Amount (Rs.)</label><input type="number" id="g-target" placeholder="100000" min="1"></div>
       <div class="fg"><label>Already Saved (Rs.)</label><input type="number" id="g-saved" placeholder="0" min="0"></div>
       <div class="fg"><label>Monthly Saving (Rs.)</label><input type="number" id="g-monthly" placeholder="5000" min="0"></div>
-      <div class="fg"><label>Target Date</label><input type="month" id="g-date"></div>
+      <div class="fg"><label>Target Date</label><input type="date" id="g-date" max="2046-12-31"></div>
     </div>
     <div class="modal-actions">
       <button class="btn-outline" onclick="closeModal('goalModal')">Cancel</button>
@@ -568,7 +886,7 @@
   </div>
 </div>
 
-<script src="/static/js/app.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 <script>
   // Payment feature
   const PAY_CATEGORIES = {
@@ -672,7 +990,6 @@
   }
 
   async function deletePayment(id) {
-    if (!confirm('Delete this payment?')) return;
     try {
       const res = await fetch(`/delete_payment/${id}`, {method:'DELETE'});
       const data = await res.json();
@@ -686,6 +1003,102 @@
     if (d) d.valueAsDate = new Date();
     loadPayments();
   });
+
+  function reloadRecs(btn) {
+    recsLoaded = false;
+    btn.classList.add('spinning');
+    loadRecommendations().finally(() => btn.classList.remove('spinning'));
+  }
+
+  // ── TIPS ──
+  function renderTips() {
+    const { income, entries } = appData;
+    const out   = entries.reduce((s, e) => s + e.amount, 0);
+    const ratio = income > 0 ? Math.round((out / income) * 100) : 0;
+    const banner = document.getElementById('ratio-banner');
+    const grid   = document.getElementById('tips-grid');
+    if (!banner || !grid) return;
+
+    let accent, accentRgb, tips, statusLabel, statusMsg;
+
+    if (ratio > 80) {
+      accent = '#ef4444'; accentRgb = '239,68,68';
+      statusLabel = 'High Risk';
+      statusMsg = 'Your commitments are dangerously high. Act now before a financial shock hits.';
+      tips = [
+        { icon: '🚨', tag: 'Critical',  line: "Over 80% locked — one crisis away from debt.",          action: 'List every EMI. Target the smallest for prepayment first.' },
+        { icon: '✂️', tag: 'Cut Now',   line: 'Subscriptions silently bleed you every month.',          action: 'Cancel anything unused in the last 30 days — right now.' },
+        { icon: '🚫', tag: 'Freeze',    line: 'No new loans or credit swipes on non-essentials.',       action: 'Sticky note on your card: "Do I need this today?"' },
+        { icon: '📞', tag: 'Negotiate', line: 'Lenders can restructure EMIs — most never ask.',         action: 'Call your bank and request an EMI holiday or tenure extension.' },
+        { icon: '💰', tag: 'Buffer',    line: 'Build 1 month of expenses as an emergency buffer first.',action: 'Set ₹500/week standing instruction to a separate account.' },
+        { icon: '📊', tag: 'Track',     line: 'You cannot fix what you cannot see.',                    action: 'Log every payment in the Payments tab for 30 days straight.' },
+      ];
+    } else if (ratio >= 60) {
+      accent = '#f59e0b'; accentRgb = '245,158,11';
+      statusLabel = 'Moderate';
+      statusMsg = 'Manageable — but there is little room for surprises. Time to tighten up.';
+      tips = [
+        { icon: '⚠️', tag: 'Caution',  line: 'Room for surprises is shrinking fast.',                  action: 'Cut one recurring expense this month to drop below 60%.' },
+        { icon: '🎯', tag: 'Redirect', line: 'Your next hike should go to EMI, not lifestyle.',         action: 'Pre-decide: 50% of any raise goes straight to loan prepayment.' },
+        { icon: '🛡️', tag: 'Safety',   line: '3 months emergency fund — non-negotiable.',              action: 'Open a liquid fund and automate ₹2,000/mo into it today.' },
+        { icon: '🔍', tag: 'Audit',    line: 'Redundant SIPs silently waste returns.',                  action: 'Check if 2+ SIPs are in the same index — merge them now.' },
+        { icon: '📅', tag: 'Plan',     line: 'Bonuses should be budgeted before they arrive.',          action: 'Decide now: next bonus = 70% loan, 20% savings, 10% spend.' },
+        { icon: '📈', tag: 'Grow',     line: 'Every % drop in ratio = compounding unlocked.',           action: 'Set a calendar reminder to review your ratio each month.' },
+      ];
+    } else {
+      accent = '#10b981'; accentRgb = '16,185,129';
+      statusLabel = 'Healthy';
+      statusMsg = "Excellent discipline! Less than 60% committed — now make your free cash work.";
+      tips = [
+        { icon: '🏆', tag: 'Top Tier', line: "Under 60% — you're in the top financial bracket.",        action: "Don't let free cash idle. Assign it a goal right now." },
+        { icon: '📈', tag: 'Compound', line: '+10% SIP increase today = massive corpus in 10 years.',   action: 'Open your fund app and bump your SIP by ₹500 this minute.' },
+        { icon: '🎯', tag: 'Goals',    line: 'Free cash sitting idle is an opportunity wasted.',         action: 'Go to Goals tab and make a deposit into your top goal.' },
+        { icon: '🛡️', tag: 'Armour',  line: '6 months emergency fund = true financial freedom.',        action: 'Calculate 6× monthly expense and set it as a liquid fund goal.' },
+        { icon: '💎', tag: 'Tax',      line: 'ELSS gives 12%+ returns AND cuts your tax bill.',         action: "Check if you've maxed ₹1.5L in 80C investments this year." },
+        { icon: '🔁', tag: 'Review',   line: 'A healthy ratio today can slip fast — stay sharp.',       action: 'Set a monthly reminder to check your FinTrack dashboard.' },
+      ];
+    }
+
+    banner.style.background     = `rgba(${accentRgb},0.06)`;
+    banner.style.borderColor    = `rgba(${accentRgb},0.3)`;
+    banner.innerHTML = `
+      <div class="ratio-left">
+        <div class="ratio-badge" style="background:rgba(${accentRgb},0.12);color:${accent};border-color:rgba(${accentRgb},0.3)">
+          <span class="ratio-badge-dot" style="background:${accent}"></span>${statusLabel}
+        </div>
+        <div class="ratio-title">${statusMsg}</div>
+        <div class="ratio-sub">EMIs + SIPs + Expenses ÷ Monthly Income</div>
+        <div class="ratio-bar-wrap">
+          <div class="ratio-bar-fill" id="ratio-bar" style="width:0%;background:${accent}"></div>
+        </div>
+      </div>
+      <div class="ratio-right">
+        <div class="ratio-pct" style="color:${accent}">${ratio}%</div>
+        <div class="ratio-pct-label">Committed</div>
+      </div>`;
+
+    setTimeout(() => { const b = document.getElementById('ratio-bar'); if(b) b.style.width = Math.min(ratio,100)+'%'; }, 300);
+
+    grid.innerHTML = '';
+    tips.forEach((t, i) => {
+      const card = document.createElement('div');
+      card.className = 'tip-card';
+      card.style.animationDelay = (i * 0.07) + 's';
+      card.addEventListener('mouseenter', () => { card.style.borderColor = `rgba(${accentRgb},0.4)`; });
+      card.addEventListener('mouseleave', () => { card.style.borderColor = '#1f2d45'; });
+      card.innerHTML = `
+        <div class="tip-card-accent" style="background:${accent}"></div>
+        <div class="tip-number">Tip ${String(i+1).padStart(2,'0')}</div>
+        <div class="tip-icon-row">
+          <div class="tip-icon" style="background:rgba(${accentRgb},0.1);border-color:rgba(${accentRgb},0.25)">${t.icon}</div>
+          <span class="tip-tag" style="color:${accent};background:rgba(${accentRgb},0.1);border-color:rgba(${accentRgb},0.25)">${t.tag}</span>
+        </div>
+        <div class="tip-line">${t.line}</div>
+        <div class="tip-divider"></div>
+        <div class="tip-action"><span class="tip-arrow" style="color:${accent}">→</span><span>${t.action}</span></div>`;
+      grid.appendChild(card);
+    });
+  }
 </script>
 </body>
 </html>
