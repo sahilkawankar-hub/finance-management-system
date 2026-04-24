@@ -379,3 +379,143 @@ td { padding: 14px 20px; font-size: 14px; color: var(--text); }
   main { padding: 16px; }
   header { padding: 0 16px; }
 }
+/* ── LIGHT THEME ── */
+body.light {
+  --bg:      #f0f4f8;
+  --surface: #ffffff;
+  --card:    #ffffff;
+  --border:  #d1dce8;
+  --text:    #1a202c;
+  --muted:   #64748b;
+}
+
+/* Header */
+body.light header {
+  background: #ffffff;
+  border-bottom: 1px solid #d1dce8;
+}
+
+/* Cards */
+body.light .card,
+body.light .stat-card {
+  background: #ffffff;
+  border-color: #d1dce8;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+/* Tables */
+body.light thead tr {
+  background: #f8fafc;
+}
+body.light tbody tr:hover {
+  background: rgba(0,0,0,0.03);
+}
+body.light th,
+body.light td {
+  color: #1a202c;
+}
+
+/* Nav buttons */
+body.light .nav-btn {
+  color: #64748b;
+}
+body.light .nav-btn:hover {
+  color: #1a202c;
+}
+
+/* Modals */
+body.light .modal {
+  background: #ffffff;
+  border-color: #d1dce8;
+}
+body.light .fg input,
+body.light .fg select {
+  background: #f8fafc;
+  border-color: #d1dce8;
+  color: #1a202c;
+}
+body.light .fg input::placeholder {
+  color: #94a3b8;
+}
+body.light .type-btn {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #d1dce8;
+}
+
+/* Progress track */
+body.light .progress-track,
+body.light .rp-track {
+  background: #e2e8f0;
+}
+
+/* Dropdown */
+body.light .dropdown-menu {
+  background: #ffffff;
+  border-color: #d1dce8;
+}
+body.light .dropdown-menu button {
+  color: #1a202c;
+}
+body.light .dropdown-menu button:hover {
+  background: #f0f4f8;
+}
+
+/* Due items */
+body.light .due-item {
+  border-bottom-color: #e2e8f0;
+}
+
+/* Recommendation cards (AI Recs tab) */
+body.light .rec-card {
+  background: #ffffff;
+  border-color: #d1dce8;
+  color: #1a202c;
+}
+body.light .rec-card p,
+body.light .rec-card span,
+body.light .rec-card div {
+  color: #1a202c;
+}
+
+/* Tips tab cards */
+body.light .tip-card,
+body.light [class*="tip"] {
+  background: #ffffff;
+  border-color: #d1dce8;
+  color: #1a202c;
+}
+
+/* Stat values and labels */
+body.light .stat-value {
+  color: #1a202c;
+}
+body.light .stat-label,
+body.light .stat-sub {
+  color: #64748b;
+}
+
+/* Section titles */
+body.light .section-title {
+  color: #1a202c;
+}
+
+/* Filter buttons */
+body.light .filter-btn {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #d1dce8;
+}
+
+/* Empty state */
+body.light .empty-state {
+  color: #64748b;
+}
+
+/* Scrollbar */
+body.light ::-webkit-scrollbar-track {
+  background: #f0f4f8;
+}
+body.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
