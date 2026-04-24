@@ -2,8 +2,40 @@ let appData = { income: 0, entries: [], goals: [] };
 let currentFilter = "All";
 let pieInst = null, barInst = null, expInst = null, sipInst = null;
 let emiBreakInst = null, cashflowInst = null, expPieInst = null, sipProjInst = null;
+let recsLoaded = false;
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+// ── XSS SANITISER ──
+function esc(str) {
+  const d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(str ?? '')));
+  return d.innerHTML;
+}
+
+// ── THEME ──
+function toggleTheme() {
+  const isLight = document.body.classList.toggle("light");
+  document.getElementById("themeToggle").textContent = isLight ? "☀️" : "🌙";
+  localStorage.setItem("fintrack-theme", isLight ? "light" : "dark");
+}
+(function applyTheme() {
+  if (localStorage.getItem("fintrack-theme") === "light") {
+    document.body.classList.add("light");
+    // Button text set after DOM loads
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById("themeToggle");
+      if (btn) btn.textContent = "☀️";
+    });
+  }
+})();
+
+function toast(msg, type = "success") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
 // ── INIT ──
 async function fetchData() {
   try {
@@ -28,11 +60,14 @@ function renderAll() {
   renderDashboard();
   renderEntries();
   renderGoals();
-  renderReports();
+  renderTips();
+  if (document.getElementById("tab-reports").classList.contains("active")) {
+    renderReports();
+  }
 }
 
 function sum(type) { return appData.entries.filter(e => e.type === type).reduce((s,e) => s + e.amount, 0); }
-function fmt(n)    { return "Rs. " + Number(n).toLocaleString(); }
+function fmt(n)    { return "₹" + Number(n).toLocaleString(); }
 function setText(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
 // ── DASHBOARD ──
@@ -78,10 +113,10 @@ function renderDashEMI() {
         <span style="font-size:13px;font-weight:600">${e.name}</span>
         <span style="font-family:'Courier New',monospace;font-size:13px;color:#ef4444">${fmt(e.amount)}/mo</span>
       </div>
-      <div style="background:#1f2d45;border-radius:99px;height:6px;margin-bottom:4px">
+      <div class="emi-prog-track">
         <div style="width:${pct}%;height:100%;border-radius:99px;background:#ef4444"></div>
       </div>
-      <div style="color:#64748b;font-size:11px">${pct}% paid · ${e.remaining||0} months left${e.bank?" · "+e.bank:""}</div>
+      <div class="emi-prog-sub">${pct}% paid · ${e.remaining||0} months left${e.bank?" · "+e.bank:""}</div>
     </div>`;
   }).join("");
 }
@@ -94,10 +129,22 @@ function renderUpcoming() {
   el.innerHTML = list.map(e => {
     const days = e.dueDate - today;
     const clr  = days <= 3 ? "#ef4444" : "#e2e8f0";
+const currentMonth = new Date().toISOString().slice(0,7);
+    const paid = e.paidMonth === currentMonth;
     return `<div class="due-item">
-      <div><div class="due-name">${e.name}</div><div class="due-meta">Day ${e.dueDate} &nbsp;·&nbsp; ${days===0?"Today!":days+" days"}</div></div>
-      <div class="due-right"><span class="badge badge-${e.type}">${e.type}</span><span class="due-amt" style="color:${clr}">${fmt(e.amount)}</span></div>
-    </div>`;
+      <div>
+        <div class="due-name">${e.name}</div>
+        <div class="due-meta">Day ${e.dueDate} &nbsp;·&nbsp; ${days===0?"Today!":days+" days"}</div>
+      </div>
+      <div class="due-right">
+        <span class="badge badge-${e.type}">${e.type}</span>
+        <span class="due-amt" style="color:${clr}">${fmt(e.amount)}</span>
+        ${paid
+          ? `<span style="color:#10b981;font-size:12px;font-weight:700">✅ Paid</span>`
+          : `<button class="btn-paid btn-mark-paid" data-id="${e.id}">✅ Mark Paid</button>`
+        }
+      </div>
+    </div>`;    
   }).join("");
 }
 
@@ -114,14 +161,22 @@ function renderEntries() {
     if (e.type === "EMI")     det = `${e.remaining||0}/${e.tenure||0} months left · ${e.bank||""}`;
     if (e.type === "SIP")     det = `${e.elapsed||0}/${e.duration||0} months · ${e.fund||""}`;
     if (e.type === "Expense") det = e.category || "";
+const currentMonth = new Date().toISOString().slice(0,7);
+    const paid = e.paidMonth === currentMonth;
     return `<tr class="${i%2!==0?"alt-row":""}">
       <td class="td-name">${e.name}</td>
       <td><span class="badge badge-${e.type}">${e.type}</span></td>
       <td class="td-amount">${fmt(e.amount)}</td>
       <td class="td-meta">Day ${e.dueDate}</td>
       <td class="td-meta">${det}</td>
-      <td><button class="btn-remove" onclick="deleteEntry(${e.id})">Remove</button></td>
-    </tr>`;
+      <td style="white-space:nowrap">
+        ${paid
+          ? `<span style="color:#10b981;font-size:12px;font-weight:700;margin-right:8px">✅ Paid</span>`
+          : `<button class="btn-paid btn-mark-paid" data-id="${e.id}">✅ Mark Paid</button>`
+        }
+        <button class="btn-remove" onclick="deleteEntry(${e.id})">Remove</button>
+      </td>
+    </tr>`;    
   }).join("");
 }
 
@@ -155,7 +210,9 @@ function renderGoals() {
     const pct      = Math.min(100, Math.round((g.savedAmount/g.targetAmount)*100));
     const done     = g.savedAmount >= g.targetAmount;
     const remaining= g.targetAmount - g.savedAmount;
-    const months   = g.monthlyTarget > 0 ? Math.ceil(remaining/g.monthlyTarget) : null;
+    const months   = g.deadline
+  ? Math.max(0, (new Date(g.deadline).getFullYear() - new Date().getFullYear()) * 12 + (new Date(g.deadline).getMonth() - new Date().getMonth()))
+  : g.monthlyTarget > 0 ? Math.ceil(remaining / g.monthlyTarget) : null;
     const deadline = g.deadline ? new Date(g.deadline).toLocaleDateString("en-IN",{month:"short",year:"numeric"}) : "No deadline";
     return `<div class="goal-card">
       ${done ? '<div class="goal-done-tag">✅ Complete!</div>' : ""}
@@ -361,6 +418,9 @@ function switchTab(name) {
   document.getElementById("tab-" + name).classList.add("active");
   document.querySelector(".nav-btn[data-tab='"+name+"']").classList.add("active");
   if (name === "reports") renderReports();
+  if (name === "recommendations") {
+    if (!recsLoaded) loadRecommendations();
+  }
 }
 
 // ── USER DROPDOWN ──
@@ -398,6 +458,11 @@ function openGoalModal() {
   ["g-name","g-target","g-saved","g-monthly","g-date"].forEach(id => {
     const el=document.getElementById(id); if(el) el.value="";
   });
+  const dateEl = document.getElementById("g-date");
+  if (dateEl) {
+    dateEl.min = new Date().toISOString().slice(0, 10);
+    dateEl.max = (new Date().getFullYear() + 20) + "-12-31";
+  }
   document.getElementById("g-icon").value = "✈️";
   document.querySelectorAll(".emoji-opt").forEach(e => e.classList.remove("selected"));
   document.querySelectorAll(".emoji-opt")[0].classList.add("selected");
@@ -434,9 +499,9 @@ async function submitEntry() {
   const name   = document.getElementById("f-name").value.trim();
   const amount = parseFloat(document.getElementById("f-amount").value);
   const due    = parseInt(document.getElementById("f-due").value);
-  if (!name)                              { alert("Please enter a name.");                return; }
-  if (isNaN(amount) || amount <= 0)       { alert("Please enter a valid amount.");        return; }
-  if (isNaN(due) || due < 1 || due > 31) { alert("Due date must be between 1 and 31."); return; }
+  if (!name)                              { toast("Please enter a name.", "error");                return; }
+  if (isNaN(amount) || amount <= 0)       { toast("Please enter a valid amount.", "error");        return; }
+  if (isNaN(due) || due < 1 || due > 31) { toast("Due date must be between 1 and 31.", "error"); return; }
   const entry = { type, name, amount, dueDate: due };
   if (type === "EMI") { entry.tenure=parseInt(document.getElementById("f-tenure").value)||0; entry.remaining=parseInt(document.getElementById("f-remaining").value)||0; entry.bank=document.getElementById("f-bank").value.trim(); }
   if (type === "SIP") { entry.duration=parseInt(document.getElementById("f-duration").value)||0; entry.elapsed=parseInt(document.getElementById("f-elapsed").value)||0; entry.fund=document.getElementById("f-fund").value.trim(); }
@@ -444,16 +509,42 @@ async function submitEntry() {
   try {
     const res = await fetch("/api/entries", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(entry) });
     const r = await res.json();
-    if (r.success) { closeModal("addModal"); await fetchData(); }
-    else alert("Failed to save. Try again.");
-  } catch(e) { alert("Cannot reach server."); }
+    if (r.success) { closeModal("addModal"); await fetchData(); toast("Entry added!"); }
+    else toast("Failed to save. Try again.", "error");
+  } catch(e) { toast("Cannot reach server.", "error"); }
 }
 
 async function deleteEntry(id) {
-  if (!confirm("Remove this entry?")) return;
-  await fetch("/api/entries/"+id, { method:"DELETE" });
-  await fetchData();
+  try {
+    await fetch("/api/entries/"+id, { method:"DELETE" });
+    await fetchData();
+    toast("Entry removed.", "info");
+  } catch(e) { toast("Could not delete. Try again.", "error"); }
 }
+async function markPaid(id) {
+  try {
+    const res = await fetch("/api/entries/" + id + "/pay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      toast("Something went wrong. Try again.", "error");
+      return;
+    }
+    const r = await res.json();
+    if (r.success) {
+      await fetchData();
+      toast("Marked as paid! ✅");
+    } else {
+      toast("Failed to mark as paid.", "error");
+    }
+  } catch(e) {
+    console.error("markPaid error:", e);
+    toast("Cannot reach server.", "error");
+  }
+}
+
 
 async function submitGoal() {
   const name    = document.getElementById("g-name").value.trim();
@@ -462,41 +553,47 @@ async function submitGoal() {
   const monthly = parseFloat(document.getElementById("g-monthly").value) || 0;
   const date    = document.getElementById("g-date").value;
   const icon    = document.getElementById("g-icon").value;
-  if (!name)                         { alert("Please enter a goal name.");           return; }
-  if (isNaN(target) || target <= 0) { alert("Please enter a valid target amount."); return; }
+  if (!name)                         { toast("Please enter a goal name.", "error");           return; }
+  if (isNaN(target) || target <= 0) { toast("Please enter a valid target amount.", "error"); return; }
   const goal = { name, targetAmount:target, savedAmount:saved, monthlyTarget:monthly, deadline:date, icon };
   try {
     const res = await fetch("/api/goals", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(goal) });
     const r = await res.json();
-    if (r.success) { closeModal("goalModal"); await fetchData(); switchTab("goals"); }
-    else alert("Failed to save goal.");
-  } catch(e) { alert("Cannot reach server."); }
+    if (r.success) { closeModal("goalModal"); await fetchData(); switchTab("goals"); toast("Goal saved!"); }
+    else toast("Failed to save goal.", "error");
+  } catch(e) { toast("Cannot reach server.", "error"); }
 }
 
 async function deleteGoal(id) {
-  if (!confirm("Delete this goal?")) return;
-  await fetch("/api/goals/"+id, { method:"DELETE" });
-  await fetchData();
+  try {
+    await fetch("/api/goals/"+id, { method:"DELETE" });
+    await fetchData();
+    toast("Goal removed.", "info");
+  } catch(e) { toast("Could not delete. Try again.", "error"); }
 }
 
 async function submitDeposit() {
   const id     = parseInt(document.getElementById("dep-goal-id").value);
   const amount = parseFloat(document.getElementById("dep-amount").value);
-  if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); return; }
+  if (isNaN(amount) || amount <= 0) { toast("Please enter a valid amount.", "error"); return; }
   try {
     const res = await fetch("/api/goals/"+id+"/deposit", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({amount}) });
     const r = await res.json();
-    if (r.success) { closeModal("depositModal"); await fetchData(); }
-    else alert("Failed to deposit.");
-  } catch(e) { alert("Cannot reach server."); }
+    if (r.success) { closeModal("depositModal"); await fetchData(); toast("Money added to goal!"); }
+    else toast("Failed to deposit.", "error");
+  } catch(e) { toast("Cannot reach server.", "error"); }
 }
 
 async function saveIncome() {
   const income = parseFloat(document.getElementById("f-income").value);
-  if (isNaN(income) || income <= 0) { alert("Please enter a valid income."); return; }
-  await fetch("/api/income", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({income}) });
-  closeModal("incomeModal");
-  await fetchData();
+  if (isNaN(income) || income <= 0) { toast("Please enter a valid income.", "error"); return; }
+  try {
+    const res = await fetch("/api/income", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({income}) });
+    if (!res.ok) throw new Error("Failed");
+    closeModal("incomeModal");
+    await fetchData();
+    toast("Income updated!");
+  } catch(e) { toast("Could not save income. Try again.", "error"); }
 }
 
 // EMI BREAKDOWN BAR CHART
@@ -690,3 +787,134 @@ function drawSIPProjection() {
 }
 
 fetchData();
+
+// ── RECOMMENDATIONS ──────────────────────────────────────────────
+
+async function loadRecommendations() {
+  const wrap = document.getElementById('rec-cards-wrap');
+  const skeleton = document.getElementById('rec-skeleton');
+  const errorBox = document.getElementById('rec-error');
+  if (!wrap) return;
+
+  if (skeleton) skeleton.style.display = 'grid';
+  wrap.style.display = 'none';
+  if (errorBox) errorBox.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/recommendations');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+
+    if (skeleton) skeleton.style.display = 'none';
+    wrap.style.display = 'grid';
+
+    renderRecMeta(data.meta);
+    renderRecCards(data.cards);
+    recsLoaded = true;
+  } catch(e) {
+    if (skeleton) skeleton.style.display = 'none';
+    if (errorBox) {
+      errorBox.style.display = 'block';
+      errorBox.textContent = 'Could not load recommendations. Is the server running?';
+    }
+  }
+}
+
+function renderRecMeta(meta) {
+  if (!meta) return;
+  const { income, total_out, ratio, free_cash } = meta;
+  setText('rec-income',   fmt(income));
+  setText('rec-outflow',  fmt(total_out));
+  setText('rec-freecash', fmt(Math.abs(free_cash)));
+  setText('rec-ratio',    ratio + '%');
+
+  const ratioEl = document.getElementById('rec-ratio');
+  if (ratioEl) ratioEl.className = 'rec-meta-val ' + (ratio > 80 ? 'c-red' : ratio > 60 ? 'c-amber' : 'c-green');
+
+  const fcEl = document.getElementById('rec-freecash');
+  if (fcEl) fcEl.className = 'rec-meta-val ' + (free_cash >= 0 ? 'c-green' : 'c-red');
+
+  const bar = document.getElementById('rec-ratio-bar');
+  if (bar) {
+    const color = ratio > 80 ? '#ef4444' : ratio > 60 ? '#f59e0b' : '#10b981';
+    setTimeout(() => { bar.style.width = Math.min(ratio,100) + '%'; bar.style.background = color; }, 300);
+  }
+}
+
+function renderRecCards(cards) {
+  const wrap = document.getElementById('rec-cards-wrap');
+  if (!wrap || !cards || !cards.length) return;
+
+  const typeConfig = {
+    danger:  { accent:'#ef4444', rgb:'239,68,68',  bg:'rgba(239,68,68,0.06)',  border:'rgba(239,68,68,0.2)'  },
+    warning: { accent:'#f59e0b', rgb:'245,158,11', bg:'rgba(245,158,11,0.06)', border:'rgba(245,158,11,0.2)' },
+    success: { accent:'#10b981', rgb:'16,185,129', bg:'rgba(16,185,129,0.06)', border:'rgba(16,185,129,0.2)' },
+    info:    { accent:'#3b82f6', rgb:'59,130,246', bg:'rgba(59,130,246,0.06)', border:'rgba(59,130,246,0.2)' },
+  };
+  const catIcons = { spending:'💸', investment:'📈', emi:'🏦', goal:'🎯', savings:'💰' };
+
+  wrap.innerHTML = cards.map((c, i) => {
+    const cfg = typeConfig[c.type] || typeConfig.info;
+    const catIcon = catIcons[c.category] || '📊';
+    const delay = (i * 0.09).toFixed(2);
+    return `<div class="rec-card" style="animation-delay:${delay}s;background:${cfg.bg};border-color:${cfg.border}"
+      onmouseenter="this.style.borderColor='${cfg.accent}';this.style.transform='translateY(-4px)'"
+      onmouseleave="this.style.borderColor='${cfg.border}';this.style.transform='translateY(0)'">
+      <div class="rec-card-topbar" style="background:${cfg.accent}"></div>
+      <div class="rec-card-header">
+        <div class="rec-card-icon" style="background:rgba(${cfg.rgb},0.12);border-color:rgba(${cfg.rgb},0.25)">${c.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div class="rec-cat-row">
+            <span>${catIcon}</span>
+            <span style="color:${cfg.accent};text-transform:uppercase;letter-spacing:1px;font-size:10px;font-weight:700">${c.category}</span>
+          </div>
+          <div class="rec-card-title">${c.title}</div>
+        </div>
+        <div class="rec-tag" style="color:${cfg.accent};background:rgba(${cfg.rgb},0.1);border-color:rgba(${cfg.rgb},0.25)">${c.tag}</div>
+      </div>
+      <div class="rec-summary">${c.summary}</div>
+      <div class="rec-divider"></div>
+      <div class="rec-action-row">
+        <span class="rec-arrow" style="color:${cfg.accent}">→</span>
+        <span class="rec-action-text">${c.action}</span>
+      </div>
+      <div class="rec-impact" style="color:${cfg.accent};background:rgba(${cfg.rgb},0.08);border-color:rgba(${cfg.rgb},0.2)">
+        💥 ${c.impact}
+      </div>
+    </div>`;
+  }).join('');
+}
+// ── MARK PAID — event delegation ──
+document.addEventListener("click", function(e) {
+  const btn = e.target.closest(".btn-mark-paid");
+  if (!btn) return;
+  const id = parseInt(btn.dataset.id);
+  if (!id) return;
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+  markPaid(id).finally(() => {
+    btn.disabled = false;
+    btn.textContent = "✅ Mark Paid";
+  });
+});
+// ── EXPORT CSV ──
+function exportCSV() {
+  const rows = [["Date", "Category", "Amount", "Note"]];
+  document.querySelectorAll("#pay-tbody tr").forEach(tr => {
+    const cells = tr.querySelectorAll("td");
+    if (cells.length >= 4)
+      rows.push([
+        cells[0].textContent.trim(),
+        cells[1].textContent.trim(),
+        cells[2].textContent.trim(),
+        cells[3].textContent.trim()
+      ]);
+  });
+  if (rows.length === 1) { toast("No payments to export.", "error"); return; }
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = "fintrack_payments.csv";
+  a.click();
+  toast("Payments exported! ⬇");
+}
